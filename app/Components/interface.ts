@@ -1,0 +1,109 @@
+export interface simplifiedProduct{
+    _id:string;
+    imageUrl:string;
+    price:number;
+    slug:string;
+    title:string;
+     categoryName: string;
+    availableQuantity:number;
+}
+
+export interface SizeGuideRow {
+  label: string;
+  values: string[];
+}
+
+export interface ProductSizeGuide {
+  active?: boolean;
+  title?: string;
+  description?: string;
+  measurementImage?: any;
+  chartType?: 'standard' | 'numerical' | 'alpha' | 'custom';
+  sizeChart?: Array<{
+    region: string;
+    measurement: string;
+    values: {
+      XS?: string;
+      S?: string;
+      M?: string;
+      L?: string;
+      XL?: string;
+      XXL?: string;
+      customSizes?: Array<{
+        label: string;
+        value: string;
+      }>;
+    };
+  }>;
+  fitNotes?: string;
+  disclaimer?: string;
+}
+
+
+
+export interface fullProduct {
+   sizeGuide?: ProductSizeGuide;
+  _id: string;
+  title: string;
+  description?: string;
+  slug: {
+    current: string;
+  };
+  mainImages: SanityImage[];
+  price: number;
+  discount?: number;
+  category: {
+    title: string;
+    slug: {
+      current: string;
+    };
+  };
+  colors?: ColorVariant[];
+}
+
+export interface SanityImage {
+  _key: string;
+  asset: {
+    _ref: string;
+    _type: "reference";
+    url: string;
+     imageUrl:string;
+  };
+}
+
+export interface SizeVariant {
+  size: string;
+  quantity: number;
+  amount?: number;
+}
+
+export interface ColorVariant {
+  _key: string;
+  name: string;
+  color: {
+    hex: string;
+  };
+  amount?: number;
+  quantity: number;
+  about?: string;
+  images?: SanityImage[];
+  sizes?: SizeVariant[];
+}
+
+export interface Product {
+  _id: string;
+  title: string;
+  description?: string;
+  slug: {
+    current: string;
+  };
+  mainImages: SanityImage[];
+  price: number;
+  discount?: number;
+  availableQuantity: number;
+  colors?: ColorVariant[];
+  category: {
+    _ref: string;
+    _type: "reference";
+  };
+}
