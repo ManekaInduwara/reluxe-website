@@ -25,11 +25,11 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   const pathname = usePathname()
   
   // Check if current route should hide layout elements
-  const hideLayout = HIDE_LAYOUT_ROUTES.some(route => 
+  const hideLayout = pathname ? HIDE_LAYOUT_ROUTES.some(route => 
     typeof route === 'string' 
       ? pathname.startsWith(route)
       : route.test(pathname)
-  )
+  ) : false
 
   return (
     <>

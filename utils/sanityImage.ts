@@ -3,12 +3,21 @@ type SanityImageSource = {
   asset?: {
     url?: string
   }
+} | {
+  _id: string;
+  url: string;
 }
 
 export const getSanityImageUrl = (source: SanityImageSource | string | null): string | null => {
   if (!source) return null
   if (typeof source === 'string') return source.trim() || null
-  if (source.asset?.url) return source.asset.url
+  
+  // Handle direct url property (e.g., { _id: string, url: string })
+  if ('url' in source && source.url) return source.url
+  
+  // Handle asset.url structure
+  if ('asset' in source && source.asset?.url) return source.asset.url
+  
   return null
 }
 

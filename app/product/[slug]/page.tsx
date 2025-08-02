@@ -70,14 +70,15 @@ async function getData(slug:string){
 export default async function ProductPage({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }) {
-  const data: fullProduct = await getData(params.slug);
+  const resolvedParams = await params;
+  const data: fullProduct = await getData(resolvedParams.slug);
 
 
    if (!data) {
     return (
-     <ProductNotFound attemptedSlug={params.slug} />
+     <ProductNotFound attemptedSlug={resolvedParams.slug} />
     )
   }
 

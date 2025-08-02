@@ -1,29 +1,28 @@
-import type { NextApiRequest, NextApiResponse } from 'next'
+import { NextRequest, NextResponse } from 'next/server'
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ message: 'Method not allowed' })
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json()
+    const { order_id, payment_id } = body
+    const merchantSecret = process.env.PAYHERE_MERCHANT_SECRET
+
+    // Verify payment with PayHere API using the secret
+    // This is just a conceptual example
+    const verificationResponse = await verifyPaymentWithPayHere({
+      order_id,
+      payment_id,
+      merchant_secret: merchantSecret
+    })
+
+    if (verificationResponse.status === 'success') {
+      // Update your database that payment was verified
+      return NextResponse.json({ verified: true }, { status: 200 })
+    }
+    
+    return NextResponse.json({ verified: false }, { status: 200 })
+  } catch (error) {
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
   }
-
-  const { order_id, payment_id } = req.body
-  const merchantSecret = process.env.PAYHERE_MERCHANT_SECRET
-
-  // Verify payment with PayHere API using the secret
-  // This is just a conceptual example
-  const verificationResponse = await verifyPaymentWithPayHere({
-    order_id,
-    payment_id,
-    merchant_secret: merchantSecret
-  })
-
-  if (verificationResponse.status === 'success') {
-    // Update your database that payment was verified
-    return res.status(200).json({ verified: true })
-  }
- verified: false })
 }
 
 async function verifyPaymentWithPayHere({

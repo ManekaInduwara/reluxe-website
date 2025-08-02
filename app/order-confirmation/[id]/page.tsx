@@ -12,10 +12,11 @@ import {
 } from 'lucide-react'
 
 interface OrderConfirmationProps {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }
 
 export default async function OrderConfirmation({ params }: OrderConfirmationProps) {
+  const resolvedParams = await params;
   const order = await client.fetch(
     `*[_type == "order" && _id == $id][0]{
       _id,
@@ -39,7 +40,7 @@ export default async function OrderConfirmation({ params }: OrderConfirmationPro
       bankSlipImage { asset-> },
       createdAt
     }`,
-    { id: params.id }
+    { id: resolvedParams.id }
   )
 
   if (!order) {

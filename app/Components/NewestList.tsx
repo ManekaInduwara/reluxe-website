@@ -64,7 +64,8 @@ export default function NewestList({ data }: { data: Product[] }) {
       });
 
       // Heading animation with text reveal
-      gsap.from(headingRef.current?.children, {
+      if (headingRef.current?.children) {
+        gsap.from(headingRef.current.children, {
         scrollTrigger: {
           trigger: headingRef.current,
           start: "top bottom-=15%",
@@ -75,7 +76,8 @@ export default function NewestList({ data }: { data: Product[] }) {
         stagger: 0.2,
         duration: 1,
         ease: "expo.out"
-      });
+        });
+      }
 
       // Individual product animations
       productRefs.current.forEach((ref, i) => {
@@ -281,7 +283,9 @@ export default function NewestList({ data }: { data: Product[] }) {
               {data.map((product, index) => (
                 <div
                   key={product._id}
-                  ref={el => productRefs.current[index] = el}
+                  ref={el => {
+                    productRefs.current[index] = el;
+                  }}
                   className="product-card relative rounded-2xl overflow-hidden bg-neutral-900 border border-neutral-800 transition-all duration-300 hover:border-white/50 hover:shadow-xl hover:shadow-white/5"
                   style={{ minWidth: '300px', maxWidth: '300px' }}
                   onClick={() => toggleQuickView(product._id)}
@@ -374,7 +378,9 @@ export default function NewestList({ data }: { data: Product[] }) {
           {data.map((product, index) => (
             <div
               key={product._id}
-              ref={el => productRefs.current[index] = el}
+              ref={el => {
+                productRefs.current[index] = el;
+              }}
               className="product-card relative rounded-2xl overflow-hidden bg-neutral-900 border border-neutral-800 transition-all duration-300 hover:border-white/50 hover:shadow-xl hover:shadow-white/5"
               onClick={() => toggleQuickView(product._id)}
             >

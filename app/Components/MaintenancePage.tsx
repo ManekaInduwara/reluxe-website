@@ -48,7 +48,7 @@ export default function MaintenancePage() {
       });
 
       // Background elements animation
-      const circles = [];
+      const circles: HTMLDivElement[] = [];
       for (let i = 0; i < 5; i++) {
         const circle = document.createElement("div");
         circle.className = "absolute rounded-full border border-gray-800";

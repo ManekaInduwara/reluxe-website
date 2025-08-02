@@ -119,10 +119,9 @@ export function CheckoutForm({ cartItems, subtotal, shippingCost, total }: Check
       const asset = await client.assets.upload('image', file, {
         filename: file.name,
         contentType: file.type,
-        onProgress: (event) => {
-          setUploadProgress(Math.round((event.loaded / event.total) * 100))
-        },
       })
+      // Progress updates are not supported in the current Sanity client version
+      setUploadProgress(100)
       return {
         _type: 'image',
         asset: { _type: 'reference', _ref: asset._id },

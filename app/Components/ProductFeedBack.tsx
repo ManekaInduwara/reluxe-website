@@ -98,11 +98,7 @@ export function ProductFeedbackSection({
 
   const handleRateProduct = async (value: number) => {
     if (!isSignedIn) {
-      toast({
-        title: 'Sign in required',
-        description: 'Please sign in to rate products',
-        variant: 'default',
-      });
+      toast.error('Please sign in to rate products');
       return;
     }
 
@@ -154,18 +150,10 @@ export function ProductFeedbackSection({
         { scale: 1.1, duration: 0.3, yoyo: true, repeat: 1 }
       );
 
-      toast({
-        title: 'Rating submitted',
-        description: `You rated this product ${value} stars`,
-        variant: 'default',
-      });
+      toast.success(`You rated this product ${value} stars`);
     } catch (error) {
       console.error('Error submitting rating:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to submit rating',
-        variant: 'destructive',
-      });
+      toast.error('Failed to submit rating');
     } finally {
       setIsLoading(false);
     }
@@ -173,20 +161,12 @@ export function ProductFeedbackSection({
 
   const handleSubmitFeedback = async () => {
     if (!isSignedIn) {
-      toast({
-        title: 'Sign in required',
-        description: 'Please sign in to submit feedback',
-        variant: 'default',
-      });
+      toast.error('Please sign in to submit feedback');
       return;
     }
 
     if (!comment.trim() || userRating === 0) {
-      toast({
-        title: 'Incomplete feedback',
-        description: 'Please provide both a rating and comment',
-        variant: 'destructive',
-      });
+      toast.error('Please provide both a rating and comment');
       return;
     }
 
@@ -204,8 +184,12 @@ export function ProductFeedbackSection({
         rating: userRating,
       });
 
-      // Add to local state
-      setFeedbacks([newFeedback, ...feedbacks]);
+      // Add to local state with createdAt
+      const feedbackWithDate = {
+        ...newFeedback,
+        createdAt: new Date().toISOString()
+      };
+      setFeedbacks([feedbackWithDate, ...feedbacks]);
       setComment('');
       setShowForm(false);
 
@@ -217,18 +201,10 @@ export function ProductFeedbackSection({
         ease: 'power2.out'
       });
 
-      toast({
-        title: 'Feedback submitted',
-        description: 'Thank you for your feedback!',
-        variant: 'default',
-      });
+      toast.success('Thank you for your feedback!');
     } catch (error) {
       console.error('Error submitting feedback:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to submit feedback',
-        variant: 'destructive',
-      });
+      toast.error('Failed to submit feedback');
     } finally {
       setIsLoading(false);
     }

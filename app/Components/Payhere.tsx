@@ -124,7 +124,10 @@ export function PayHereButton({
     }
 
     // Set up callbacks
-    window.payhere = window.payhere || {}
+    if (!window.payhere) {
+      console.error('PayHere SDK not loaded')
+      return
+    }
     
     window.payhere.onCompleted = function(orderId: string) {
       setIsLoading(false)

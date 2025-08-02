@@ -1,21 +1,21 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
+import { NextRequest, NextResponse } from 'next/server';
 import { client } from '@/sanity/lib/client';
 import crypto from 'crypto';
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') return res.status(405).end();
-
-  const {
-    merchant_id,
-    order_id,
-    payment_id,
-    payhere_amount,
-    payhere_currency,
-    status_code,
-    md5sig,
-  } = req.body;
-
+export async function POST(req: NextRequest) {
   try {
+    const body = await req.json();
+    
+    const {
+      merchant_id,
+      order_id,
+      payment_id,
+      payhere_amount,
+      payhere_currency,
+      status_code,
+      md5sig,
+    } = body;
+
     const merchantSecret = process.env.PAYHERE_MERCHANT_SECRET!;
     const localSig = [
       merchant_id,
@@ -30,7 +30,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     if (md5sig !== expectedSig) {
       console.warn('Invalid PayHere Signature');
-      return res.status(400).end();
+      return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
     }
 
     const isPaid = status_code === '2';
@@ -45,9 +45,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     console.log(`Order ${order_id} updated to ${isPaid ? 'paid' : 'payment_failed'}`);
 
-    res.status(200).send('OK');
+    return NextResponse.json({ message: 'OK' }, { status: 200 });
   } catch (e) {
     console.error('PayHere Webhook Error:', e);
-    res.status(500).end();
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
