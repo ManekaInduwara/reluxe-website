@@ -4,7 +4,6 @@ import "./globals.css";
 import Navbar from "./Components/Navbar";
 import { CartProvider } from "./Context/CartContext";
 import CartDisplay from "./Components/CartDisplay";
-import { MotionConfig } from "framer-motion";
 import { ClerkProvider } from "@clerk/nextjs";
 import NewsletterPopup from "./Components/NewsletterPopup";
 import Footer from "./Components/Footer";
@@ -71,16 +70,7 @@ export default function RootLayout({
       </head>
       <body className={`${poppins.variable} antialiased bg-black text-white`}>
         <ClerkProvider>
-          <MotionConfig
-            transition={{
-              type: "spring",
-              mass: 0.5,
-              damping: 10,
-              stiffness: 100,
-              restDelta: 0.0001,
-            }}
-          >
-            <GsapScroll>
+           <GsapScroll>
               <Toaster 
                 richColors 
                 position="top-right" 
@@ -104,7 +94,6 @@ export default function RootLayout({
               </CartProvider>
 
             </GsapScroll>
-          </MotionConfig>
         </ClerkProvider>
       </body>
     </html>
