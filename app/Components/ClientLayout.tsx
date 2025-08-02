@@ -6,6 +6,11 @@ import Footer from './Footer'
 import { Toaster } from 'sonner'
 import CartDisplay from './CartDisplay'
 
+import dynamic from 'next/dynamic';
+const MotionDiv = dynamic(() => import('framer-motion').then((mod) => mod.motion.div), {
+  ssr: false
+});
+
 // Define routes where layout elements should be hidden
 const HIDE_LAYOUT_ROUTES = [
   '/countdown',
