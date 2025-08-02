@@ -15,12 +15,19 @@ import SplitText from '@/Animations/SplitText/SplitText';
 
 gsap.registerPlugin(ScrollTrigger);
 
+export interface Category {
+  _id: string;
+  name: string;
+  slug: string;
+}
+
+
 interface Product {
   _id: string;
   title: string;
   price: number;
   slug: string;
-  categoryName: string;
+   categories?: Category[];
   discount: number;
   imageUrl: string;
   availableQuantity: number;
@@ -316,8 +323,17 @@ export default function NewestList({ data }: { data: Product[] }) {
                     <h3 className="text-lg font-semibold truncate group-hover:text-white transition-colors">
                       {product.title}
                     </h3>
-                    <p className="text-sm text-gray-400 truncate">{product.categoryName}</p>
-
+                     <div className="flex flex-wrap items-center gap-2">
+                {product.categories?.map((category: any) => (
+                  <Link
+                    key={`cat-${category._id}`}
+                    href={`/category/${category.slug}`}
+                    className="text-xs text-gray-300 hover:text-white uppercase tracking-wider px-3 py-1 rounded-full border border-gray-700 hover:border-white transition-colors"
+                  >
+                    {category.name}
+                  </Link>
+                ))}
+              </div>
                     {renderStars(product)}
 
                     <div className="mt-4 flex justify-between items-center">
@@ -337,12 +353,7 @@ export default function NewestList({ data }: { data: Product[] }) {
                           </p>
                         )}
                       </div>
-                      <button 
-                        className="p-2.5 rounded-full border border-white/20 bg-white/5 text-white hover:bg-white hover:text-black transition-all hover:scale-110"
-                        aria-label="Add to cart"
-                      >
-                        <ShoppingCart className="h-5 w-5" />
-                      </button>
+                   
                     </div>
 
                     <div className="mt-4">
@@ -402,8 +413,17 @@ export default function NewestList({ data }: { data: Product[] }) {
                 <h3 className="text-lg font-semibold truncate group-hover:text-white transition-colors">
                   {product.title}
                 </h3>
-                <p className="text-sm text-gray-400">{product.categoryName}</p>
-
+                 <div className="flex flex-wrap items-center gap-2">
+                {product.categories?.map((category: any) => (
+                  <Link
+                    key={`cat-${category._id}`}
+                    href={`/category/${category.slug}`}
+                    className="text-xs text-gray-300 hover:text-white uppercase tracking-wider px-3 py-1 rounded-full border border-gray-700 hover:border-white transition-colors"
+                  >
+                    {category.name}
+                  </Link>
+                ))}
+              </div>
                 {renderStars(product)}
 
                 <div className="mt-4 flex justify-between items-center">
@@ -423,12 +443,7 @@ export default function NewestList({ data }: { data: Product[] }) {
                       </p>
                     )}
                   </div>
-                  <button 
-                    className="p-2.5 rounded-full border border-white/20 bg-white/5 text-white hover:bg-white hover:text-black transition-all hover:scale-110"
-                    aria-label="Add to cart"
-                  >
-                    <ShoppingCart className="h-5 w-5" />
-                  </button>
+              
                 </div>
 
                 <div className="mt-4">
@@ -444,7 +459,7 @@ export default function NewestList({ data }: { data: Product[] }) {
           className="flex justify-center mt-20"
         >
           <Link
-            href="/product"
+            href="/category/all"
             className="relative px-8 py-3.5 border border-white/20 text-white rounded-full text-sm font-medium hover:bg-white hover:text-black transition-all group overflow-hidden"
           >
             <span className="relative z-10 flex items-center gap-2">

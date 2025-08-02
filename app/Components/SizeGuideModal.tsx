@@ -1,8 +1,10 @@
-
 'use client'
 
 import { useState, useMemo } from 'react'
+import Image from 'next/image'
+import { Ruler } from 'lucide-react'
 import { ProductSizeGuide } from './interface'
+import { urlFor } from '@/sanity/lib/image'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -12,7 +14,6 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import {
   Table,
   TableBody,
@@ -21,9 +22,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import Image from 'next/image'
-import { urlFor } from '@/sanity/lib/image'
-import { RulerDimensionLine } from 'lucide-react'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 interface SizeGuidePopupProps {
   sizeGuide?: ProductSizeGuide
@@ -33,7 +32,7 @@ interface SizeGuidePopupProps {
 
 export function SizeGuidePopup({
   sizeGuide,
-  buttonText = 'Size Guide',
+  buttonText = 'SIZE GUIDE',
   className = '',
 }: SizeGuidePopupProps) {
   const [isOpen, setIsOpen] = useState(false)
@@ -54,9 +53,9 @@ export function SizeGuidePopup({
         XXL: convertMeasurement(item.values.XXL, unit),
         customSizes: item.values.customSizes?.map(size => ({
           ...size,
-          value: convertMeasurement(size.value, unit)
-        }))
-      }
+          value: convertMeasurement(size.value, unit),
+        })),
+      },
     }))
   }, [sizeGuide.sizeChart, unit])
 
@@ -71,58 +70,62 @@ export function SizeGuidePopup({
 
   return (
     <div className={className}>
-      <Button 
-        variant="outline"
+      <Button
+        variant="ghost"
         onClick={() => setIsOpen(true)}
-        className="text-sm gap-2 bg-black"
+        className="text-sm gap-2 border border-gray-700 hover:bg-gray-900 hover:text-white transition-colors"
       >
         {buttonText}
-        <RulerDimensionLine className='w-4 h-4'/>
+        <Ruler className="w-4 h-4" />
       </Button>
+
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-black text-white">
-          <DialogHeader>
-            <DialogTitle>{sizeGuide.title || 'Size Guide'}</DialogTitle>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto bg-black text-white border border-gray-800 font-[family-name:var(--font-poppins)]">
+          <DialogHeader className="border-b border-gray-800 pb-4">
+            <DialogTitle className="text-2xl font-light tracking-wider">
+              {sizeGuide.title || 'SIZE GUIDE'}
+            </DialogTitle>
             {sizeGuide.description && (
-              <DialogDescription>{sizeGuide.description}</DialogDescription>
+              <DialogDescription className="text-gray-400">
+                {sizeGuide.description}
+              </DialogDescription>
             )}
           </DialogHeader>
 
-          <div className="space-y-4">
+          <div className="space-y-6">
             {sizeGuide.measurementImage && (
-              <div className="relative aspect-video bg-muted rounded-lg overflow-hidden">
+              <div className="relative aspect-video bg-gray-900 rounded-lg overflow-hidden border border-gray-800">
                 <Image
                   src={urlFor(sizeGuide.measurementImage).url()}
                   alt={sizeGuide.measurementImage.alt || 'Measurement diagram'}
                   fill
-                  className="object-contain"
+                  className="object-contain p-4"
+                  priority
                 />
               </div>
             )}
 
-            <div className="flex items-center space-x-4 bg-black text-white">
-              <Label>Measurement Units:</Label>
-              <ToggleGroup 
-                type="single" 
+            <div className="flex justify-between items-center">
+              <Label className="text-gray-400">MEASUREMENT UNITS</Label>
+              <Tabs
                 value={unit}
                 onValueChange={(value: 'in' | 'cm') => setUnit(value)}
+                className="w-[180px]"
               >
-                <ToggleGroupItem value="in" aria-label="Toggle inches">
-                  Inches
-                </ToggleGroupItem>
-                <ToggleGroupItem value="cm" aria-label="Toggle centimeters">
-                  Centimeters
-                </ToggleGroupItem>
-              </ToggleGroup>
+                <TabsList className="bg-gray-900 border border-gray-800 text-white">
+                  <TabsTrigger value="in" className="w-full text-white  data-[state=active]:text-black">IN</TabsTrigger>
+                  <TabsTrigger value="cm" className="w-full text-white data-[state=active]:text-black">CM</TabsTrigger>
+                </TabsList>
+              </Tabs>
             </div>
 
-            <div className="rounded-md border bg-black text-amber-50">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className='text-white'>Measurement</TableHead>
+            <div className="rounded-lg border border-gray-800 overflow-hidden">
+              <Table className="border-collapse">
+                <TableHeader className="bg-gray-900">
+                  <TableRow className="border-b border-gray-800">
+                    <TableHead className="text-white font-medium py-4">MEASUREMENT</TableHead>
                     {sizeLabels.map((label, index) => (
-                      <TableHead key={index} className="text-center text-amber-50">
+                      <TableHead key={index} className="text-center text-white font-medium py-4">
                         {label}
                       </TableHead>
                     ))}
@@ -130,21 +133,22 @@ export function SizeGuidePopup({
                 </TableHeader>
                 <TableBody>
                   {convertedChart.map((item, index) => (
-                    <TableRow key={index}>
-                      <TableCell className="font-medium text-amber-50">
+                    <TableRow key={index} className="border-b border-gray-800 last:border-b-0">
+                      <TableCell className="font-medium py-4 text-white">
                         <div>{item.region}</div>
                         {item.measurement && (
-                          <div className="text-xs text-muted-foreground mt-1 text-amber-50">
+                          <div className="text-xs text-gray-400 mt-1">
                             {item.measurement}
                           </div>
                         )}
                       </TableCell>
                       {sizeLabels.map((label, i) => {
-                        const value = sizeGuide.chartType === 'custom' 
-                          ? item.values.customSizes?.[i]?.value
-                          : item.values[label as keyof typeof item.values]
+                        const value =
+                          sizeGuide.chartType === 'custom'
+                            ? item.values.customSizes?.[i]?.value
+                            : item.values[label as keyof typeof item.values]
                         return (
-                          <TableCell key={i} className="text-center">
+                          <TableCell key={i} className="text-center py-4 text-white">
                             {value || '-'}
                           </TableCell>
                         )
@@ -156,15 +160,15 @@ export function SizeGuidePopup({
             </div>
 
             {(sizeGuide.fitNotes || sizeGuide.disclaimer) && (
-              <div className="space-y-2">
+              <div className="space-y-3 font-[family-name:var(--font-poppins)]">
                 {sizeGuide.fitNotes && (
-                  <div className="bg-blue-50/50 p-4 rounded-lg">
-                    <h4 className="text-sm font-medium text-blue-800">Fit Note</h4>
-                    <p className="text-sm text-blue-700">{sizeGuide.fitNotes}</p>
+                  <div className="bg-gray-900 p-4 rounded-lg border border-gray-800">
+                    <h4 className="text-sm font-medium text-white mb-2">FIT NOTE</h4>
+                    <p className="text-sm text-gray-300">{sizeGuide.fitNotes}</p>
                   </div>
                 )}
                 {sizeGuide.disclaimer && (
-                  <p className="text-xs text-muted-foreground">{sizeGuide.disclaimer}</p>
+                  <p className="text-xs text-gray-500">{sizeGuide.disclaimer}</p>
                 )}
               </div>
             )}
@@ -184,13 +188,13 @@ function convertMeasurement(value?: string, toUnit: 'in' | 'cm'): string | undef
       const cm = numValue * 2.54
       return `${cm.toFixed(1)} cm`
     }
-  }
-  else if (toUnit === 'in' && /cm\b/i.test(value)) {
+  } else if (toUnit === 'in' && /cm\b/i.test(value)) {
     const numValue = parseFloat(value)
     if (!isNaN(numValue)) {
       const inches = numValue / 2.54
       return `${inches.toFixed(1)} in`
     }
   }
+
   return value
 }

@@ -132,3 +132,141 @@
 html {
   scrollbar-width: none;
 }
+@layer base {
+  html {
+    @apply scroll-smooth;
+  }
+
+  /* Luxury smooth scrolling behavior */
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: 6rem; /* Account for fixed header */
+    }
+
+    /* Elegant scrollbar styling */
+    ::-webkit-scrollbar {
+      @apply w-2 h-2;
+    }
+
+    ::-webkit-scrollbar-track {
+      @apply bg-gray-900;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      @apply bg-red-600 rounded-full;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      @apply bg-red-700;
+    }
+
+    /* Scroll snap sections */
+    .snap-section {
+      scroll-snap-align: start;
+      scroll-margin-top: 5rem;
+    }
+
+    /* Parallax effect for hero sections */
+    .parallax-bg {
+      @apply bg-fixed bg-center bg-no-repeat bg-cover;
+    }
+
+    /* Fade-in scroll animation */
+    .fade-in-on-scroll {
+      @apply opacity-0 translate-y-8 transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)];
+    }
+
+    .fade-in-on-scroll.visible {
+      @apply opacity-100 translate-y-0;
+    }
+  }
+
+  /* Horizontal scrolling container */
+  .horizontal-scroll {
+    @apply overflow-x-auto overscroll-x-contain snap-x snap-mandatory;
+    scrollbar-width: none; /* Hide scrollbar for Firefox */
+    -ms-overflow-style: none; /* Hide scrollbar for IE/Edge */
+  }
+
+  .horizontal-scroll::-webkit-scrollbar {
+    @apply hidden; /* Hide scrollbar for Chrome/Safari */
+  }
+
+  .horizontal-scroll-item {
+    @apply snap-start flex-shrink-0;
+  }
+}
+
+/* Custom animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 1s ease-out forwards;
+}
+
+/* For reduced motion preferences */
+@media (prefers-reduced-motion) {
+  .fade-in-on-scroll,
+  .animate-fade-in-up {
+    @apply opacity-100 translate-y-0;
+    animation: none !important;
+  }
+}
+
+
+/* Advanced Cursor Styles */
+.cursor-dot {
+  position: fixed;
+  border-radius: 50%;
+  width: 16px;
+  pointer-events: none;
+  z-index: 9999;
+  mix-blend-mode: difference;
+  transition: 
+    width 0.3s cubic-bezier(0.165, 0.84, 0.44, 1),
+    height 0.3s cubic-bezier(0.165, 0.84, 0.44, 1),
+    transform 0.3s cubic-bezier(0.165, 0.84, 0.44, 1),
+    opacity 0.3s ease;
+}
+
+.cursor-outline {
+  position: fixed;
+  border-radius: 50%;
+  border: 1px solid;
+  pointer-events: none;
+  z-index: 9998;
+  mix-blend-mode: difference;
+  transition: 
+    width 0.5s cubic-bezier(0.165, 0.84, 0.44, 1),
+    height 0.5s cubic-bezier(0.165, 0.84, 0.44, 1),
+    transform 0.5s cubic-bezier(0.165, 0.84, 0.44, 1),
+    opacity 0.5s ease,
+    border-color 0.3s ease;
+}
+
+/* Hide default cursor */
+html.has-advanced-cursor,
+html.has-advanced-cursor * {
+  cursor: none !important;
+}
+
+/* Special cursor states */
+[data-cursor-hover] {
+  cursor: none !important;
+}
+
+[data-cursor-magnetic] {
+  cursor: none !important;
+  position: relative;
+  z-index: 1;
+}

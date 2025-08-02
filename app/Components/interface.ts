@@ -42,6 +42,12 @@ export interface ProductSizeGuide {
 
 
 export interface fullProduct {
+  rating: number | undefined;
+   categories?: {
+    title: string;
+    slug: string;
+  }[];
+  feedbacks: never[];
    sizeGuide?: ProductSizeGuide;
   _id: string;
   title: string;

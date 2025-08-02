@@ -42,7 +42,7 @@ export function OrderSummary({
             <div className="flex-1">
               <h3 className="font-medium">{item.title}</h3>
               <p className="text-sm text-gray-400">
-                {item.color} {item.size && `• ${item.size}`}
+                Color: {item.colorName || `#${item.color}`} <br/>   Size: {item.size && `• ${item.size}`}
               </p>
               <p className="text-sm text-gray-300">
                 {item.quantity} × LKR {item.price.toFixed(2)}

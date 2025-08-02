@@ -222,9 +222,9 @@ const Footer = () => {
   }, []);
 
   const socialLinks = [
-    { icon: <Instagram size={18} />, url: "#" },
-    { icon: <FaWhatsapp size={18} />, url: "#" },
-    { icon: <Facebook size={18} />, url: "#" },
+    { icon: <Instagram size={18} />, url: "https://www.instagram.com/reluxe_lk/" },
+    { icon: <FaWhatsapp size={18} />, url: "http://wa.me/+94728762428" },
+    { icon: <Facebook size={18} />, url: "https://www.facebook.com/share/1AyDSDrBUf/?mibextid=wwXIfr" },
   ];
 
   return (
@@ -367,9 +367,9 @@ const Footer = () => {
         <div className="flex flex-wrap gap-6">
   {[
     { text: 'FAQ', href: '/faq' },
+     { text: 'Contact Us', href: '/contact' },
     { text: 'Refund Policy', href: '/refund-policy' },
     { text: 'Cookie Settings', href: '/cookie-settings' },
-    { text: 'Accessibility', href: '/accessibility' }
   ].map((link) => (
     <Link 
       key={link.text}

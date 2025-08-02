@@ -9,7 +9,8 @@ export async function POST(request: Request) {
     const notification = Object.fromEntries(formData.entries())
 
     // Verify the payment signature
-    const merchantSecret = process.env.PAYHERE_MERCHANT_SECRET
+   const merchantSecret = process.env.PAYHERE_MERCHANT_SECRET
+
     if (!merchantSecret) {
       throw new Error('PAYHERE_MERCHANT_SECRET is not configured')
     }

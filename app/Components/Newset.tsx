@@ -10,7 +10,11 @@ async function getData() {
     title,
     discount,
     ratings,
-    "categoryName": category->name,
+   "categories": categories[]->{
+      _id,
+      name,
+      "slug": slug.current
+    },
     "slug": slug.current,
     "imageUrl": mainImages[0].asset->url,
     availableQuantity

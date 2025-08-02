@@ -1,6 +1,8 @@
-
 import { client } from "@/sanity/lib/client";
 import CategoryList from "../CategoryList";
+import CategoryNotFound from "./CategoryNotFound";
+import { Suspense } from 'react';
+import CategoryLoading from './CategoryLoading'; // Create this component for loading state
 
 interface Product {
   _id: string;
@@ -17,6 +19,7 @@ interface Product {
 async function getCategoryProducts(slug: string): Promise<{
   products: Product[];
   categoryName: string;
+  exists: boolean;
 }> {
   try {
     const result = await client.fetch(
@@ -38,18 +41,24 @@ async function getCategoryProducts(slug: string): Promise<{
     );
 
     if (!result) {
-      throw new Error('Category not found');
+      return {
+        products: [],
+        categoryName: '',
+        exists: false
+      };
     }
 
     return {
       products: result.products || [],
-      categoryName: result.name
+      categoryName: result.name,
+      exists: true
     };
   } catch (error) {
     console.error('Error fetching category products:', error);
     return {
       products: [],
-      categoryName: ''
+      categoryName: '',
+      exists: false
     };
   }
 }
@@ -60,21 +69,44 @@ export default async function CategoryPage({
   params: { slug: string };
 }) {
   if (!params?.slug) {
+    return <CategoryNotFound />;
+  }
+
+  const { products, categoryName, exists } = await getCategoryProducts(params.slug);
+
+  if (!exists) {
+    // Pass the attempted slug to show in the not found message
+    return <CategoryNotFound attemptedSlug={params.slug} />;
+  }
+
+  if (products.length === 0) {
+    // Special case for empty category
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        Category not found
+      <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white ">
+        <div className="max-w-md text-center p-6">
+          <h1 className="text-2xl font-bold mb-4">No Products in {categoryName}</h1>
+          <p className="text-gray-600 mb-6">
+            This category exists but doesn't contain any products yet.
+          </p>
+          <button 
+            onClick={() => window.history.back()} 
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+          >
+            Go Back
+          </button>
+        </div>
       </div>
     );
   }
 
-  const { products, categoryName } = await getCategoryProducts(params.slug);
-
   return (
     <main>
-      <CategoryList 
-        data={products} 
-        categoryName={categoryName} 
-      />
+      <Suspense fallback={<CategoryLoading />}>
+        <CategoryList 
+          data={products} 
+          categoryName={categoryName} 
+        />
+      </Suspense>
     </main>
   );
 }

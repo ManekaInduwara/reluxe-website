@@ -6,7 +6,7 @@ import { useEffect, useState, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
 import { Badge } from '@/components/ui/badge'
-import { ShoppingCart, X, Plus, Minus, ArrowRight, ShoppingBag, Package, CreditCard, Truck } from 'lucide-react'
+import { ShoppingCart, X, Plus, Minus, ArrowRight, ShoppingBag, Package, CreditCard, Truck, AlertCircle } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import ImageWithFallback from '@/app/Components/ImageWithFallBack'
 import { getSanityImageUrl } from '@/utils/sanityImage'
@@ -14,9 +14,17 @@ import gsap from 'gsap'
 import { useGSAP } from '@gsap/react'
 
 export default function CartDisplay() {
-  const { cartItems, removeFromCart, updateQuantity, clearCart } = useCart()
+  const { 
+    cartItems, 
+    removeFromCart, 
+    updateQuantity, 
+    clearCart, 
+    isCartOpen, 
+    openCart, 
+    closeCart 
+  } = useCart()
+  
   const [isMounted, setIsMounted] = useState(false)
-  const [isOpen, setIsOpen] = useState(false)
   const router = useRouter()
   const cartTriggerRef = useRef<HTMLButtonElement>(null)
   const sheetContentRef = useRef<HTMLDivElement>(null)
@@ -28,7 +36,6 @@ export default function CartDisplay() {
 
   // GSAP Animations
   useGSAP(() => {
-    // Cart icon bounce animation when items change
     if (itemCount > 0) {
       gsap.to(cartTriggerRef.current, {
         scale: 1.2,
@@ -39,8 +46,7 @@ export default function CartDisplay() {
       })
     }
 
-    // Cart sheet entrance animation
-    if (isOpen) {
+    if (isCartOpen) {
       gsap.from(sheetContentRef.current, {
         x: 100,
         opacity: 0,
@@ -48,22 +54,19 @@ export default function CartDisplay() {
         ease: "power3.out"
       })
     }
-  }, [itemCount, isOpen])
+  }, [itemCount, isCartOpen])
 
   useEffect(() => {
     setIsMounted(true)
   }, [])
 
-  if (!isMounted) return null
-
   const handleProceedToCheckout = () => {
-    // Close animation
     gsap.to(sheetContentRef.current, {
       x: 100,
       opacity: 0,
       duration: 0.3,
       onComplete: () => {
-        setIsOpen(false)
+        closeCart()
         setTimeout(() => {
           router.push('/checkout')
         }, 300)
@@ -72,7 +75,6 @@ export default function CartDisplay() {
   }
 
   const handleRemoveItem = (productId: string, color: string, size: string | null) => {
-    // Item removal animation
     const itemElement = document.getElementById(`${productId}-${color}-${size}`)
     if (itemElement) {
       gsap.to(itemElement, {
@@ -89,16 +91,18 @@ export default function CartDisplay() {
     }
   }
 
+  if (!isMounted) return null
+
   return (
     <div className="fixed bottom-4 right-4 z-50 font-[family-name:var(--font-poppins)]">
-      <Sheet open={isOpen} onOpenChange={setIsOpen}>
+      <Sheet open={isCartOpen} onOpenChange={(open) => open ? openCart() : closeCart()}>
         <SheetTrigger asChild>
           <Button
             ref={cartTriggerRef}
             variant="outline"
             size="icon"
             className="h-12 w-12 rounded-full hover:bg-accent bg-black transition-transform"
-            onClick={() => setIsOpen(true)}
+            onClick={openCart}
           >
             <div className="relative">
               <ShoppingCart className="h-6 w-6" />
@@ -136,71 +140,94 @@ export default function CartDisplay() {
               </div>
             ) : (
               <div className="space-y-4">
-                {cartItems.map((item) => (
-                  <div
-                    key={`${item.productId}-${item.color}-${item.size}`}
-                    id={`${item.productId}-${item.color}-${item.size}`}
-                    className="flex gap-4 border-b pb-4 border-gray-800"
-                  >
-                    <div className="relative h-24 w-24 rounded-md overflow-hidden">
-                      <ImageWithFallback
-                        src={getSanityImageUrl(item.image)}
-                        alt={item.title}
-                        fill
-                        className="object-cover rounded-md border border-gray-700"
-                        fallback={
-                          <div className="bg-gray-900 text-amber-50 h-full w-full flex items-center justify-center rounded-md">
-                            <span className="text-xs">No image</span>
-                          </div>
-                        }
-                      />
-                    </div>
+                {cartItems.map((item) => {
+                  const maxAvailable = item.sizeQuantity || item.currentQuantity
+                  const isOutOfStock = maxAvailable !== undefined && maxAvailable <= 0
+                  const isLowStock = maxAvailable !== undefined && (item.quantity || 1) >= maxAvailable
 
-                    <div className="flex-1 space-y-2">
-                      <div className="flex justify-between">
-                        <h3 className="font-medium">{item.title}</h3>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 hover:bg-gray-800"
-                          onClick={() => handleRemoveItem(item.productId, item.color, item.size)}
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
+                  return (
+                    <div
+                      key={`${item.productId}-${item.color}-${item.size}`}
+                      id={`${item.productId}-${item.color}-${item.size}`}
+                      className={`flex gap-4 border-b pb-4 border-gray-800 ${isOutOfStock ? 'opacity-60' : ''}`}
+                    >
+                      <div className="relative h-24 w-24 rounded-md overflow-hidden">
+                        <ImageWithFallback
+                          src={getSanityImageUrl(item.image) || ''}
+                          alt={item.title}
+                          fill
+                          className="object-cover rounded-md border border-gray-700"
+                          fallback={
+                            <div className="bg-gray-900 text-amber-50 h-full w-full flex items-center justify-center rounded-md">
+                              <span className="text-xs">No image</span>
+                            </div>
+                          }
+                        />
                       </div>
 
-                      <div className="text-sm text-gray-400">
-                        <p>Color: #{item.color}</p>
-                        {item.size && <p>Size: {item.size}</p>}
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center border border-gray-700 rounded-md">
+                      <div className="flex-1 space-y-2">
+                        <div className="flex justify-between">
+                          <h3 className="font-medium">{item.title}</h3>
                           <Button
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8 hover:bg-gray-800"
-                            onClick={() => updateQuantity(item.productId, item.color, item.size, -1)}
+                            onClick={() => handleRemoveItem(item.productId, item.color, item.size)}
                           >
-                            <Minus className="h-3 w-3" />
-                          </Button>
-                          <span className="px-2 text-sm">{item.quantity || 1}</span>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 hover:bg-gray-800"
-                            onClick={() => updateQuantity(item.productId, item.color, item.size, 1)}
-                          >
-                            <Plus className="h-3 w-3" />
+                            <X className="h-4 w-4" />
                           </Button>
                         </div>
-                        <p className="font-medium">
-                          LKR {(item.price * (item.quantity || 1)).toFixed(2)}
-                        </p>
+
+                        <div className="text-sm text-gray-400">
+                          <p>Color: {item.colorName || `#${item.color}`}</p>
+                          {item.size && <p>Size: {item.size}</p>}
+                        </div>
+
+                        {isOutOfStock && (
+                          <div className="flex items-center gap-1 text-red-400 text-xs">
+                            <AlertCircle className="h-3 w-3" />
+                            <span>Out of stock</span>
+                          </div>
+                        )}
+
+                        {maxAvailable !== undefined && !isOutOfStock && (
+                          <p className="text-xs text-gray-400">
+                            Available: {maxAvailable}
+                          </p>
+                        )}
+
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center border border-gray-700 rounded-md">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 hover:bg-gray-800"
+                              onClick={() => updateQuantity(item.productId, item.color, item.size, -1)}
+                              disabled={item.quantity <= 1 || isOutOfStock}
+                            >
+                              <Minus className="h-3 w-3" />
+                            </Button>
+                            <span className={`px-2 text-sm ${isLowStock ? 'text-yellow-400' : ''}`}>
+                              {item.quantity || 1}
+                            </span>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 hover:bg-gray-800"
+                              onClick={() => updateQuantity(item.productId, item.color, item.size, 1)}
+                              disabled={isLowStock || isOutOfStock}
+                            >
+                              <Plus className="h-3 w-3" />
+                            </Button>
+                          </div>
+                          <p className="font-medium">
+                            LKR {(item.price * (item.quantity || 1)).toFixed(2)}
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             )}
           </div>
@@ -232,6 +259,10 @@ export default function CartDisplay() {
               <Button
                 className="w-full mt-4 bg-gray-900 hover:bg-gray-800 rounded-md transition-colors flex items-center gap-2"
                 onClick={handleProceedToCheckout}
+                disabled={cartItems.some(item => {
+                  const maxAvailable = item.sizeQuantity || item.currentQuantity
+                  return maxAvailable !== undefined && maxAvailable <= 0
+                })}
               >
                 Proceed to Checkout
                 <ArrowRight className="h-4 w-4" />

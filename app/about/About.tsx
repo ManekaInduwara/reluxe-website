@@ -88,7 +88,7 @@ export default function AboutPage() {
               <Instagram className="w-6 h-6 text-white cursor-pointer" />
             </motion.a>
             <motion.a
-              href="https://facebook.com/"
+              href="https://www.facebook.com/share/1AyDSDrBUf/?mibextid=wwXIfr"
               target="_blank"
               whileHover={{ scale: 1.3, color: '#EF4444' }}
               transition={{ type: 'spring', stiffness: 300 }}
@@ -96,7 +96,7 @@ export default function AboutPage() {
               <Facebook className="w-6 h-6 text-white cursor-pointer" />
             </motion.a>
             <motion.a
-              href="https://tiktok.com/"
+              href="https://www.tiktok.com/@reluxe6"
               target="_blank"
               whileHover={{ scale: 1.3, color: '#EF4444' }}
               transition={{ type: 'spring', stiffness: 300 }}

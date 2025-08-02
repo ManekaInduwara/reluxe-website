@@ -16,12 +16,20 @@ export default defineType({
       title: 'Product Description',
       type: 'text',
     }),
-    defineField({
-      name: 'category',
-      title: 'Product Category',
-      type: 'reference',
-      to: [{ type: 'category' }]
-    }),
+ // In your product schema
+defineField({
+  name: 'categories',
+  title: 'Product Categories',
+  type: 'array',
+  of: [{
+    type: 'reference',
+    to: [{ type: 'category' }],
+    options: {
+      filter: '!defined(parentCategory)', // Only show top-level categories
+    }
+  }],
+  validation: Rule => Rule.unique() // Prevent duplicate category references
+}),
     defineField({
       name: 'slug',
       title: 'Slug',
@@ -63,14 +71,12 @@ export default defineType({
       type: 'number',
       validation: (Rule) => Rule.min(0),
     }),
-    defineField({
-  name: 'ratings',
-  title: 'Ratings',
-  type: 'array',
-  of: [{ type: 'number' }],
-  options: {
-    layout: 'tags' // optional: shows as tags in Studio UI
-  }
+defineField({
+  name: 'rating',
+  title: 'Average Rating',
+  type: 'number',
+  readOnly: true,
+  initialValue: 0,
 }),
 
     defineField({

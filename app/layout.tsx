@@ -9,6 +9,9 @@ import { ClerkProvider } from "@clerk/nextjs";
 import NewsletterPopup from "./Components/NewsletterPopup";
 import Footer from "./Components/Footer";
 import GsapScroll from "./Components/GsapScroll";
+import { Toaster } from 'sonner'
+import CustomCursor from "./Components/CustomCursor";
+
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -22,14 +25,52 @@ export const metadata: Metadata = {
   description: "Elevate Every Look",
 };
 
+import ClientLayout from "./Components/ClientLayout";
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+
   return (
-    <html className="scrollbar-hide" lang="en">
-      <body className={`${poppins.variable}`}>
+    <html lang="en" className="scroll-smooth">
+      <head>
+        <style dangerouslySetInnerHTML={{
+          __html: `
+            html {
+              scroll-behavior: smooth;
+            }
+            /* Custom smooth scroll effect */
+            @media (prefers-reduced-motion: no-preference) {
+              html {
+                scroll-behavior: smooth;
+              }
+              /* Luxury scrollbar styling */
+              ::-webkit-scrollbar {
+                width: 8px;
+                height: 8px;
+              }
+              ::-webkit-scrollbar-track {
+                background: #0a0a0a;
+              }
+              ::-webkit-scrollbar-thumb {
+                background: #b91c1c;
+                border-radius: 4px;
+              }
+              ::-webkit-scrollbar-thumb:hover {
+                background: #991b1b;
+              }
+              /* Custom scroll snap for sections */
+              .snap-section {
+                scroll-snap-align: start;
+                scroll-margin-top: 80px; /* Adjust for fixed header */
+              }
+            }
+          `
+        }} />
+      </head>
+      <body className={`${poppins.variable} antialiased bg-black text-white`}>
         <ClerkProvider>
           <MotionConfig
             transition={{
@@ -41,13 +82,28 @@ export default function RootLayout({
             }}
           >
             <GsapScroll>
-              <Navbar />
+              <Toaster 
+                richColors 
+                position="top-right" 
+                toastOptions={{
+                  style: {
+                    background: '#0a0a0a',
+                    border: '1px solid #262626',
+                    color: '#f5f5f5',
+                    fontFamily: 'var(--font-poppins)'
+                  }
+                }} 
+              />
+          
               <CartProvider>
-                <NewsletterPopup />
-                {children}
-                <CartDisplay />
+               <ClientLayout>
+                <main className="min-h-screen">
+                  {children}
+                </main>
+                </ClientLayout>
+            
               </CartProvider>
-              <Footer />
+
             </GsapScroll>
           </MotionConfig>
         </ClerkProvider>

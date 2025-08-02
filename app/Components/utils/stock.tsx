@@ -5,7 +5,8 @@ interface CartItem {
   title: string;
   price: number;
   quantity: number;
-  color?: string;
+  color?: string; // This should be the color _key
+  colorName?: string; // Add this if you need the display name
   size?: string;
   image: string;
 }
@@ -23,11 +24,17 @@ export const reduceStock = async (cartItems: CartItem[]) => {
     if (newAvailableQuantity < 0) newAvailableQuantity = 0;
 
     const updatedColors = product.colors.map((colorItem: any) => {
+      // Match by _key (assuming item.color is the _key)
       if (colorItem._key !== item.color) {
         return colorItem; // Keep untouched
       }
 
       const updatedColor = { ...colorItem };
+
+      // Update color name if provided and different
+      if (item.colorName && updatedColor.color !== item.colorName) {
+        updatedColor.color = item.colorName;
+      }
 
       // Reduce color-level quantity
       if (typeof updatedColor.quantity === 'number') {

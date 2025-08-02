@@ -12,6 +12,7 @@ export default {
       { name: 'title', type: 'string' },
       { name: 'price', type: 'number' },
       { name: 'quantity', type: 'number' },
+     
       { name: 'color', type: 'string' },
       { name: 'size', type: 'string' },
       { name: 'image', type: 'string' }

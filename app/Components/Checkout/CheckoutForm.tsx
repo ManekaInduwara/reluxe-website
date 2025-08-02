@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
@@ -10,10 +10,11 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { CreditCard, Truck, Banknote, Loader2, User, Mail, Phone, Home, MapPin, Info } from 'lucide-react'
+import { Truck, Banknote, Loader2, User, Mail, Phone, Home, MapPin } from 'lucide-react'
 import { Textarea } from '@/components/ui/textarea'
 import { reduceStock } from '../utils/stock'
 import { BankSlipUpload } from './BankSlipUpload'
+import { useCart } from '@/app/Context/CartContext'
 
 interface CartItem {
   productId: string
@@ -39,56 +40,18 @@ const formSchema = z.object({
   phone: z.string().min(10, { message: 'Phone number must be at least 10 digits' }),
   address: z.string().min(10, { message: 'Address must be at least 10 characters' }),
   city: z.string().min(2, { message: 'City must be at least 2 characters' }),
-  paymentMethod: z.enum(['payhere', 'cod', 'bank']),
+  paymentMethod: z.enum(['cod', 'bank']),
   bankSlipNumber: z.string().optional(),
 })
 
 type FormValues = z.infer<typeof formSchema>
-
-interface PayHerePaymentParams {
-  sandbox: boolean
-  merchant_id: string
-  return_url: string
-  cancel_url: string
-  notify_url: string
-  order_id: string
-  items: string
-  amount: string
-  currency: string
-  first_name: string
-  last_name: string
-  email: string
-  phone: string
-  address: string
-  city: string
-  country: string
-  delivery_address: string
-  delivery_city: string
-  delivery_country: string
-  custom_1: string
-  custom_2: string
-  onCompleted: (orderId: string) => void
-  onDismissed: () => void
-  onError: (error: any) => void
-}
-
-declare global {
-  interface Window {
-    payhere: {
-      startPayment: (payment: PayHerePaymentParams) => void
-      onCompleted?: (orderId: string) => void
-      onDismissed?: () => void
-      onError?: (error: any) => void
-    }
-  }
-}
 
 export function CheckoutForm({ cartItems, subtotal, shippingCost, total }: CheckoutFormProps) {
   const [bankSlipFile, setBankSlipFile] = useState<File | null>(null)
   const [isUploading, setIsUploading] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
-  const [payhereReady, setPayhereReady] = useState(false)
+  const { clearCart } = useCart()
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -99,96 +62,41 @@ export function CheckoutForm({ cartItems, subtotal, shippingCost, total }: Check
       phone: '',
       address: '',
       city: '',
-      paymentMethod: 'payhere',
+      paymentMethod: 'cod',
       bankSlipNumber: '',
     },
   })
 
   const paymentMethod = form.watch('paymentMethod')
 
-  // Load PayHere script
-  useEffect(() => {
-    const existingScript = document.querySelector('script[src^="https://www.payhere.lk/lib/payhere.js"]')
-    if (existingScript) {
-      setPayhereReady(true)
-      return
-    }
-
-    const script = document.createElement('script')
-    script.src = 'https://sandbox.payhere.lk/lib/payhere.js' // Sandbox for testing
-    script.async = true
-    script.onload = () => {
-      setPayhereReady(true)
-      toast.info('PayHere Sandbox Loaded', {
-        description: 'Test payment system ready',
-        icon: <CreditCard className="w-4 h-4" />,
-      })
-    }
-    script.onerror = () => {
-      toast.error('Failed to load PayHere SDK')
-    }
-    document.body.appendChild(script)
-
-    return () => {
-      document.body.removeChild(script)
-    }
-  }, [])
-
   const handleFieldFocus = (fieldName: string) => {
     switch (fieldName) {
       case 'firstName':
-        toast.info('First Name', {
-          description: 'Please enter your legal first name',
-          icon: <User className="w-4 h-4" />,
-        })
+        toast.info('First Name', { description: 'Please enter your legal first name', icon: <User className="w-4 h-4" /> })
         break
       case 'lastName':
-        toast.info('Last Name', {
-          description: 'Please enter your legal last name',
-          icon: <User className="w-4 h-4" />,
-        })
+        toast.info('Last Name', { description: 'Please enter your legal last name', icon: <User className="w-4 h-4" /> })
         break
       case 'email':
-        toast.info('Email', {
-          description: "We'll send your order confirmation here",
-          icon: <Mail className="w-4 h-4" />,
-        })
+        toast.info('Email', { description: "We'll send your order confirmation here", icon: <Mail className="w-4 h-4" /> })
         break
       case 'phone':
-        toast.info('Phone', {
-          description: 'For delivery updates and order tracking',
-          icon: <Phone className="w-4 h-4" />,
-        })
+        toast.info('Phone', { description: 'For delivery updates and order tracking', icon: <Phone className="w-4 h-4" /> })
         break
       case 'address':
-        toast.info('Address', {
-          description: 'Include building number and street name',
-          icon: <Home className="w-4 h-4" />,
-        })
+        toast.info('Address', { description: 'Include building number and street name', icon: <Home className="w-4 h-4" /> })
         break
       case 'city':
-        toast.info('City', {
-          description: 'Your delivery location city',
-          icon: <MapPin className="w-4 h-4" />,
-        })
+        toast.info('City', { description: 'Your delivery location city', icon: <MapPin className="w-4 h-4" /> })
         break
     }
   }
 
   const handlePaymentMethodChange = (value: string) => {
-    form.setValue('paymentMethod', value as FormValues['paymentMethod'])
+    const method = value as FormValues['paymentMethod']
+    form.setValue('paymentMethod', method)
 
-    switch (value) {
-      case 'payhere':
-        toast('Secure Payment', {
-          description: "You'll be redirected to PayHere for card payment",
-          icon: <CreditCard className="w-5 h-5" />,
-          action: {
-            label: 'Test Cards',
-            onClick: () => showSandboxInfo(),
-          },
-        })
-        break
+    switch (method) {
       case 'cod':
         toast('Cash on Delivery', {
           description: 'Pay when your order arrives at your doorstep',
@@ -202,21 +110,6 @@ export function CheckoutForm({ cartItems, subtotal, shippingCost, total }: Check
         })
         break
     }
-  }
-
-  const showSandboxInfo = () => {
-    toast.info('Sandbox Test Cards', {
-      description: (
-        <div className="space-y-2 text-sm">
-          <p><strong>VISA:</strong> 4916217501611292</p>
-          <p><strong>Mastercard:</strong> 5304572425535384</p>
-          <p><strong>AMEX:</strong> 346781005510225</p>
-          <p>Use any future expiry date and CVV 123</p>
-        </div>
-      ),
-      duration: 10000,
-      icon: <Info className="w-4 h-4" />,
-    })
   }
 
   const uploadImageToSanity = async (file: File) => {
@@ -240,97 +133,19 @@ export function CheckoutForm({ cartItems, subtotal, shippingCost, total }: Check
     }
   }
 
-  const startPayHerePayment = async (createdOrder: any, values: FormValues) => {
-    if (!window.payhere || !payhereReady) {
-      toast.error('Payment system not ready. Please try again later.')
-      setIsSubmitting(false)
-      return
-    }
-
-    try {
-      const payment: PayHerePaymentParams = {
-        sandbox: true, // Set to false for production
-        merchant_id: '1231068', // Sandbox merchant ID
-        return_url: `${window.location.origin}/order-confirmation/${createdOrder._id}?sandbox=true`,
-        cancel_url: `${window.location.origin}/order-cancelled/${createdOrder._id}`,
-        notify_url: `${window.location.origin}/api/payhere/notify`,
-        order_id: createdOrder._id,
-        items: cartItems.map(i => i.title).join(', ').substring(0, 50),
-        amount: total.toFixed(2),
-        currency: 'LKR',
-        first_name: values.firstName,
-        last_name: values.lastName,
-        email: values.email,
-        phone: values.phone,
-        address: values.address,
-        city: values.city,
-        country: 'Sri Lanka',
-        delivery_address: values.address,
-        delivery_city: values.city,
-        delivery_country: 'Sri Lanka',
-        custom_1: createdOrder._id,
-        custom_2: 'sandbox_order',
-        onCompleted: (orderId: string) => {
-          toast.success('Payment Completed', {
-            description: `Payment successful for order ${orderId}`,
-          })
-          client.patch(createdOrder._id)
-            .set({ 
-              status: 'paid',
-              paymentId: orderId,
-              paidAt: new Date().toISOString()
-            })
-            .commit()
-            .then(() => {
-              window.location.href = `/order-confirmation/${createdOrder._id}?sandbox=true`
-            })
-        },
-        onDismissed: () => {
-          toast.warning('Payment Cancelled', {
-            description: 'You closed the payment window',
-          })
-          setIsSubmitting(false)
-        },
-        onError: (error: any) => {
-          console.error('Payment error:', error)
-          toast.error('Payment Failed', {
-            description: error.message || 'An error occurred during payment',
-          })
-          setIsSubmitting(false)
-        }
-      }
-
-      window.payhere.onCompleted = payment.onCompleted
-      window.payhere.onDismissed = payment.onDismissed
-      window.payhere.onError = payment.onError
-
-      window.payhere.startPayment(payment)
-    } catch (error) {
-      console.error('Error starting payment:', error)
-      toast.error('Failed to initiate payment')
-      setIsSubmitting(false)
-    }
-  }
-
   const onSubmit = async (values: FormValues) => {
     if (!cartItems.length) {
-      toast.error('Empty Cart', {
-        description: 'Your cart is empty. Please add items to checkout',
-      })
+      toast.error('Empty Cart', { description: 'Your cart is empty. Please add items to checkout' })
       return
     }
 
     if (values.paymentMethod === 'bank') {
       if (!bankSlipFile) {
-        toast.error('Bank Slip Required', {
-          description: 'Please upload your bank deposit slip',
-        })
+        toast.error('Bank Slip Required', { description: 'Please upload your bank deposit slip' })
         return
       }
       if (!values.bankSlipNumber) {
-        toast.error('Slip Number Required', {
-          description: 'Please enter your bank slip reference number',
-        })
+        toast.error('Slip Number Required', { description: 'Please enter your bank slip reference number' })
         return
       }
     }
@@ -374,21 +189,12 @@ export function CheckoutForm({ cartItems, subtotal, shippingCost, total }: Check
       const createdOrder = await client.create(orderData)
       await reduceStock(cartItems)
 
-      if (values.paymentMethod === 'payhere') {
-        startPayHerePayment(createdOrder, values)
-      } else {
-        toast.success('Order Placed!', {
-          id: toastId,
-          description: 'Your order has been confirmed',
-        })
-        window.location.href = `/order-confirmation/${createdOrder._id}`
-      }
+      toast.success('Order Placed!', { id: toastId, description: 'Your order has been confirmed' })
+      clearCart()
+      window.location.href = `/order-confirmation/${createdOrder._id}`
     } catch (error) {
       console.error('Checkout error:', error)
-      toast.error('Order Failed', {
-        id: toastId,
-        description: 'Something went wrong. Please try again',
-      })
+      toast.error('Order Failed', { id: toastId, description: 'Something went wrong. Please try again' })
       setIsSubmitting(false)
     }
   }
@@ -495,51 +301,21 @@ export function CheckoutForm({ cartItems, subtotal, shippingCost, total }: Check
       </div>
 
       <div className="pt-4">
-        <div className="flex justify-between items-center">
-          <h3 className="font-semibold text-lg uppercase">Payment Method</h3>
-          {paymentMethod === 'payhere' && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={showSandboxInfo}
-              className="text-xs flex items-center gap-1"
-            >
-              <Info className="w-3 h-3" /> Test Cards
-            </Button>
-          )}
-        </div>
+        <h3 className="font-semibold text-lg uppercase">Payment Method</h3>
+        
         <RadioGroup
-          defaultValue="payhere"
+          defaultValue="cod"
           className="space-y-4 pt-2"
           onValueChange={handlePaymentMethodChange}
         >
           <div className="flex items-center space-x-2">
-            <RadioGroupItem
-              value="payhere"
-              id="payhere"
-              className="text-white bg-white"
-            />
-            <Label htmlFor="payhere" className="flex items-center gap-2">
-              <CreditCard className="h-4 w-4" /> Pay with PayHere
-            </Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem
-              value="cod"
-              id="cod"
-              className="text-white bg-white"
-            />
+            <RadioGroupItem value="cod" id="cod" className="text-white bg-white" />
             <Label htmlFor="cod" className="flex items-center gap-2">
               <Truck className="h-4 w-4" /> Cash on Delivery
             </Label>
           </div>
           <div className="flex items-center space-x-2">
-            <RadioGroupItem
-              value="bank"
-              id="bank"
-              className="text-white bg-white"
-            />
+            <RadioGroupItem value="bank" id="bank" className="text-white bg-white" />
             <Label htmlFor="bank" className="flex items-center gap-2">
               <Banknote className="h-4 w-4" /> Bank Transfer
             </Label>

@@ -3,6 +3,13 @@ import { urlFor } from '@/sanity/lib/image'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import Image from 'next/image'
+import {
+  CheckCircle,
+  Banknote,
+  FileImage,
+  ShoppingCart,
+  Mail,
+} from 'lucide-react'
 
 interface OrderConfirmationProps {
   params: { id: string }
@@ -24,6 +31,7 @@ export default async function OrderConfirmation({ params }: OrderConfirmationPro
         price,
         quantity,
         color,
+        colorName,
         size,
         image
       },
@@ -36,9 +44,9 @@ export default async function OrderConfirmation({ params }: OrderConfirmationPro
 
   if (!order) {
     return (
-      <div className="container mx-auto px-4 py-12 max-w-3xl text-center">
+      <div className="container mx-auto px-4 py-12 max-w-3xl text-center font-[family-name:var(--font-poppins)]">
         <h1 className="text-xl font-semibold text-red-600">Order not found</h1>
-        <p className="text-gray-600 mt-2">Please check your confirmation link or contact support.</p>
+        <p className="text-gray-400 mt-2">Please check your confirmation link or contact support.</p>
         <Button asChild className="mt-6">
           <Link href="/products">Back to Shop</Link>
         </Button>
@@ -47,46 +55,52 @@ export default async function OrderConfirmation({ params }: OrderConfirmationPro
   }
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
-      <div className="bg-black rounded-lg  p-6 md:p-8">
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-green-600 mb-2">Order Confirmed</h1>
-          <p className="text-gray-100">
-            Your order <span className="font-semibold">#{order._id.slice(-6).toUpperCase()}</span> has been received.
+    <div className="container mx-auto px-4 py-8 max-w-xl font-[family-name:var(--font-poppins)]">
+      <div className="bg-black text-white rounded-lg p-6 space-y-6">
+        {/* Order Confirmed Header */}
+        <div className="text-center space-y-2">
+          <CheckCircle className="mx-auto text-green-500 h-10 w-10" />
+          <h1 className="text-xl font-semibold uppercase tracking-wide">Order Confirmed</h1>
+          <p className="text-gray-400">
+            Your order <span className="font-medium text-white">#{order._id.slice(-6).toUpperCase()}</span> has been received.
           </p>
         </div>
 
+        {/* Bank Payment Details */}
         {order.paymentMethod === 'bank' && (
-          <div className="mb-8 border-b pb-6">
-            <h2 className="text-lg font-semibold mb-4">Bank Deposit Details</h2>
-            <div className="grid md:grid-cols-2 gap-6">
-              <div>
-                <h3 className="font-medium mb-2">Bank Information</h3>
-                <div className="text-sm text-gray-600 space-y-1">
-                  <p>Bank: Commercial Bank</p>
-                  <p>Account Name: Your Store Name</p>
-                  <p>Account Number: 1234567890</p>
-                  <p>Amount: LKR {order.total.toFixed(2)}</p>
-                  {order.bankSlipNumber && (
-                    <p className="mt-2">Slip Number: {order.bankSlipNumber}</p>
-                  )}
-                </div>
+          <div className="space-y-4 border-b border-gray-700 pb-6">
+            <div className="flex items-center gap-2">
+              <Banknote className="text-red-500 h-5 w-5" />
+              <h2 className="font-medium uppercase tracking-wide">Bank Deposit Details</h2>
+            </div>
+            
+            <div className="grid gap-4 text-sm">
+              <div className="space-y-1">
+                <p className="text-gray-400">Bank: <span className="text-white">Commercial Bank</span></p>
+                <p className="text-gray-400">Account Name: <span className="text-white">Your Store Name</span></p>
+                <p className="text-gray-400">Account Number: <span className="text-white">1234567890</span></p>
+                <p className="text-gray-400">Amount: <span className="text-white">LKR {order.total.toFixed(2)}</span></p>
+                {order.bankSlipNumber && (
+                  <p className="text-gray-400">Slip Number: <span className="text-white">{order.bankSlipNumber}</span></p>
+                )}
               </div>
-
+              
               {order.bankSlipImage?.asset && (
-                <div>
-                  <h3 className="font-medium mb-2">Uploaded Bank Slip</h3>
-                  <div className="border rounded-md p-2">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <FileImage className="text-red-500 h-5 w-5" />
+                    <h3 className="text-sm font-medium">Uploaded Bank Slip</h3>
+                  </div>
+                  <div className="relative h-48 w-full rounded-md overflow-hidden bg-neutral-800">
                     <Image
-                      width={300}
-                      height={300}
                       src={urlFor(order.bankSlipImage).url()}
                       alt="Bank deposit slip"
-                      className="object-contain max-h-48 mx-auto"
+                      fill
+                      className="object-contain"
                     />
                   </div>
-                  <p className="text-sm text-gray-200 mt-2">
-                    We ll verify your payment and update you via email.
+                  <p className="text-xs text-gray-400">
+                    We'll verify your payment and update you via email.
                   </p>
                 </div>
               )}
@@ -94,30 +108,37 @@ export default async function OrderConfirmation({ params }: OrderConfirmationPro
           </div>
         )}
 
-        <div className="mb-8">
-          <h2 className="text-lg font-semibold mb-4">Order Summary</h2>
+        {/* Order Items */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2">
+            <ShoppingCart className="text-red-500 h-5 w-5" />
+            <h2 className="font-medium uppercase tracking-wide">Order Summary</h2>
+          </div>
+          
           <div className="space-y-4">
             {order.items.map((item: any) => (
-              <div key={`${item.productId}-${item.color}-${item.size}`} className="flex gap-4 border-b pb-4">
-                <div className="relative h-20 w-20 rounded-md overflow-hidden border">
+              <div
+                key={`${item.productId}-${item.color}-${item.size}`}
+                className="flex gap-4 py-4 border-b border-gray-800"
+              >
+                <div className="relative h-20 w-20 rounded-md overflow-hidden bg-neutral-800">
                   <Image
                     src={urlFor(item.image).url()}
                     alt={item.title}
-                    width={100}
-                    height={100}
-                    className="object-cover w-full h-full"
+                    fill
+                    className="object-cover"
                   />
                 </div>
                 <div className="flex-1">
                   <h3 className="font-medium">{item.title}</h3>
-                  <p className="text-sm text-gray-50">
-                    {item.color} {item.size && `• Size ${item.size}`}
+                  <p className="text-sm text-gray-400">
+                    Color:  {item.colorName || item.color}<br/> Size: {item.size && `• ${item.size}`}
                   </p>
-                  <p className="text-sm">
+                  <p className="text-sm text-gray-300">
                     {item.quantity} × LKR {item.price.toFixed(2)}
                   </p>
                 </div>
-                <div className="font-medium whitespace-nowrap">
+                <div className="font-medium">
                   LKR {(item.price * item.quantity).toFixed(2)}
                 </div>
               </div>
@@ -125,28 +146,31 @@ export default async function OrderConfirmation({ params }: OrderConfirmationPro
           </div>
         </div>
 
-        <div className="border-t pt-4">
-          <div className="flex justify-between mb-2">
-            <span>Subtotal</span>
-            <span>LKR {order.subtotal.toFixed(2)}</span>
+        {/* Order Totals */}
+        <div className="space-y-2 pt-4 border-t border-gray-800 text-sm">
+          <div className="flex justify-between">
+            <span className="text-gray-400">Subtotal</span>
+            <span className="text-white">LKR {order.subtotal.toFixed(2)}</span>
           </div>
-          <div className="flex justify-between mb-2">
-            <span>Shipping</span>
-            <span>LKR {order.shipping.toFixed(2)}</span>
+          <div className="flex justify-between">
+            <span className="text-gray-400">Shipping</span>
+            <span className="text-white">LKR {order.shipping.toFixed(2)}</span>
           </div>
-          <div className="flex justify-between font-bold text-lg mt-2 pt-2 border-t">
+          <div className="flex justify-between font-bold pt-2 border-t mt-2 border-gray-700 text-base">
             <span>Total</span>
-            <span>LKR {order.total.toFixed(2)}</span>
+            <span className="text-red-500">LKR {order.total.toFixed(2)}</span>
           </div>
         </div>
 
-        <div className="mt-8 text-center">
-          <Button asChild>
-            <Link href="/products">Continue Shopping</Link>
+        {/* Footer */}
+        <div className="pt-6 text-center space-y-4">
+          <Button asChild className="w-full bg-red-600 hover:bg-red-700">
+            <Link href="/category/all">Continue Shopping</Link>
           </Button>
-          <p className="text-sm text-gray-200 mt-4">
-            Well send you a confirmation email shortly.
-          </p>
+          <div className="flex justify-center items-center gap-2 text-sm text-gray-400">
+            <Mail className="h-4 w-4" />
+            <p>We'll send you a confirmation email shortly.</p>
+          </div>
         </div>
       </div>
     </div>

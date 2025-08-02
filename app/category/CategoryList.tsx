@@ -203,7 +203,7 @@ export default function CategoryList({ data, categoryName }: CategoryListProps) 
     const userRating = activeRatings[product._id] || null;
 
     return (
-      <div id={`rating-${product._id}`} className="flex items-center gap-1 mt-2">
+      <div id={`rating-${product._id}`} className="flex items-center gap-1 mt-2 font-[family-name:var(--font-poppins)]">
         <div className="flex">
           {[1, 2, 3, 4, 5].map((star) => (
             <button
@@ -231,7 +231,7 @@ export default function CategoryList({ data, categoryName }: CategoryListProps) 
 
   if (!data || data.length === 0) {
     return (
-      <section className="relative bg-black text-white py-16 md:py-24 px-4 sm:px-6 min-h-screen flex items-center justify-center">
+      <section className="relative bg-black text-white py-16 md:py-24 px-4 sm:px-6 min-h-screen flex items-center justify-center font-[family-name:var(--font-poppins)]">
         <div className="text-center">
           <h2 className="text-2xl font-bold mb-4">No products found in this category</h2>
           <Link href="/" className="text-blue-400 hover:underline">
@@ -245,10 +245,10 @@ export default function CategoryList({ data, categoryName }: CategoryListProps) 
   return (
     <section 
       ref={sectionRef}
-      className="relative bg-black text-white py-16 md:py-24 px-4 sm:px-6 overflow-hidden min-h-screen"
+      className="relative bg-black text-white py-16 md:py-24 px-4 sm:px-6 overflow-hidden min-h-screen font-[family-name:var(--font-poppins)]"
     >
       {/* Animated grid background */}
-      <div className="absolute inset-0 opacity-5 pointer-events-none">
+      <div className="absolute inset-0 opacity-5 pointer-events-none font-[family-name:var(--font-poppins)]">
         <div className="absolute inset-0 bg-grid-white/[0.05] [mask-image:radial-gradient(ellipse_at_center,black,transparent)]"></div>
       </div>
 
@@ -348,26 +348,19 @@ export default function CategoryList({ data, categoryName }: CategoryListProps) 
                         {product.discount > 0 ? (
                           <>
                             <p className="text-sm text-gray-500 line-through">
-                              ${product.price.toFixed(2)}
+                              LKR{product.price.toFixed(2)}
                             </p>
                             <p className="text-xl font-bold text-white">
-                              ${(product.price * (1 - product.discount / 100)).toFixed(2)}
+                              LKR{(product.price * (1 - product.discount / 100)).toFixed(2)}
                             </p>
                           </>
                         ) : (
                           <p className="text-xl font-bold text-white">
-                            ${product.price.toFixed(2)}
+                            LKR{product.price.toFixed(2)}
                           </p>
                         )}
                       </div>
-                      <button 
-                        className="p-2.5 rounded-full border border-white/20 bg-white/5 text-white hover:bg-white hover:text-black transition-all hover:scale-110"
-                        aria-label="Add to cart"
-                      >
-                        <ShoppingCart className="h-5 w-5" />
-                      </button>
                     </div>
-
                     <div className="mt-4">
                       <StockAlert quantity={product.availableQuantity} />
                     </div>
@@ -381,12 +374,12 @@ export default function CategoryList({ data, categoryName }: CategoryListProps) 
         {/* Desktop Grid */}
         <div 
           ref={desktopGridRef}
-          className="hidden md:grid grid-cols-2 lg:grid-cols-4 gap-8"
+          className="hidden md:grid grid-cols-2 lg:grid-cols-4 gap-8 font-[family-name:var(--font-poppins)]"
         >
           {data.map((product, index) => (
             <div
               key={product._id}
-              ref={el => productRefs.current[index] = el}
+              ref={el => { productRefs.current[index] = el; }}
               className="product-card relative rounded-2xl overflow-hidden bg-neutral-900 border border-neutral-800 transition-all duration-300 hover:border-white/50 hover:shadow-xl hover:shadow-white/5"
               onClick={() => toggleQuickView(product._id)}
             >
@@ -434,26 +427,19 @@ export default function CategoryList({ data, categoryName }: CategoryListProps) 
                     {product.discount > 0 ? (
                       <>
                         <p className="text-sm text-gray-500 line-through">
-                          ${product.price.toFixed(2)}
+                          LKR{product.price.toFixed(2)}
                         </p>
                         <p className="text-xl font-bold text-white">
-                          ${(product.price * (1 - product.discount / 100)).toFixed(2)}
+                          LKR{(product.price * (1 - product.discount / 100)).toFixed(2)}
                         </p>
                       </>
                     ) : (
                       <p className="text-xl font-bold text-white">
-                        ${product.price.toFixed(2)}
+                        LKR{product.price.toFixed(2)}
                       </p>
                     )}
                   </div>
-                  <button 
-                    className="p-2.5 rounded-full border border-white/20 bg-white/5 text-white hover:bg-white hover:text-black transition-all hover:scale-110"
-                    aria-label="Add to cart"
-                  >
-                    <ShoppingCart className="h-5 w-5" />
-                  </button>
                 </div>
-
                 <div className="mt-4">
                   <StockAlert quantity={product.availableQuantity} />
                 </div>
@@ -467,7 +453,7 @@ export default function CategoryList({ data, categoryName }: CategoryListProps) 
           className="flex justify-center mt-20"
         >
           <Link
-            href="/products"
+            href="/category/all"
             className="relative px-8 py-3.5 border border-white/20 text-white rounded-full text-sm font-medium hover:bg-white hover:text-black transition-all group overflow-hidden"
           >
             <span className="relative z-10 flex items-center gap-2">
