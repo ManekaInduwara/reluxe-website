@@ -343,10 +343,10 @@ export function CheckoutForm({ cartItems, subtotal, shippingCost, total }: Check
             />
           </div>
           <div className="text-sm space-y-1 text-gray-400">
-            <p>Bank: Commercial Bank</p>
-            <p>Account Name: Reluxe Clothing</p>
-            <p>Account Number: 123456789</p>
-            <p>Branch: Main Branch</p>
+            <p>Bank: Bank Of Ceylon (BOC)</p>
+            <p>Account Name:  M D N Dilmina</p>
+            <p>Account Number: 80041494</p>
+            <p>Branch: Dondra</p>
             <p className="font-semibold text-white mt-2">Amount: LKR {total.toFixed(2)}</p>
           </div>
         </div>

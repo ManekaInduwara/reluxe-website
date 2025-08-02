@@ -76,9 +76,9 @@ export default async function OrderConfirmation({ params }: OrderConfirmationPro
             
             <div className="grid gap-4 text-sm">
               <div className="space-y-1">
-                <p className="text-gray-400">Bank: <span className="text-white">Commercial Bank</span></p>
-                <p className="text-gray-400">Account Name: <span className="text-white">Your Store Name</span></p>
-                <p className="text-gray-400">Account Number: <span className="text-white">1234567890</span></p>
+                <p className="text-gray-400">Bank: <span className="text-white">Bank Of Ceylon(BOC)</span></p>
+                <p className="text-gray-400">Account Name: <span className="text-white">M D N Dilmina </span></p>
+                <p className="text-gray-400">Account Number: <span className="text-white">80041494</span></p>
                 <p className="text-gray-400">Amount: <span className="text-white">LKR {order.total.toFixed(2)}</span></p>
                 {order.bankSlipNumber && (
                   <p className="text-gray-400">Slip Number: <span className="text-white">{order.bankSlipNumber}</span></p>
