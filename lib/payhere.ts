@@ -1,9 +1,19 @@
 import crypto from 'crypto'
 
-export const generateSignature = (params) => {
+interface PayHereParams {
+  merchant_id: string;
+  order_id: string;
+  amount: string | number;
+  currency: string;
+}
+
+export const generateSignature = (params: PayHereParams) => {
   try {
     const merchantSecret = process.env.PAYHERE_SECRET
-    const formattedAmount = parseFloat(params.amount).toFixed(2)
+    if (!merchantSecret) {
+      throw new Error('PAYHERE_SECRET environment variable is not set')
+    }
+    const formattedAmount = parseFloat(String(params.amount)).toFixed(2)
     const hashedSecret = crypto.createHash('md5').update(merchantSecret).digest('hex').toUpperCase()
     
     const dataToSign = 
@@ -20,18 +30,28 @@ export const generateSignature = (params) => {
   }
 }
 
-export const generatePayherePayment = async (order, amount) => {
+export const generatePayherePayment = async (order: any, amount: number) => {
   try {
+    const merchantId = process.env.PAYHERE_MERCHANT_ID
+    const nextAuthUrl = process.env.NEXTAUTH_URL
+    
+    if (!merchantId) {
+      throw new Error('PAYHERE_MERCHANT_ID environment variable is not set')
+    }
+    if (!nextAuthUrl) {
+      throw new Error('NEXTAUTH_URL environment variable is not set')
+    }
+    
     const orderId = order._id.toString()
     const city = order?.billingAddress?.city || 'Colombo'
     const address = order?.billingAddress?.address || 'No Address Provided'
-    const formattedAmount = parseFloat(amount).toFixed(2)
+    const formattedAmount = parseFloat(String(amount)).toFixed(2)
 
     const params = {
-      merchant_id: process.env.PAYHERE_MERCHANT_ID.trim(),
-      return_url: `${process.env.NEXTAUTH_URL}/api/site/order/payment/payhere/validate`.trim(),
-      cancel_url: `${process.env.NEXTAUTH_URL}/order-failed?orderId=${orderId}`.trim(),
-      notify_url: `${process.env.NEXTAUTH_URL}/api/site/payment/payhere/notify`.trim(),
+      merchant_id: merchantId.trim(),
+      return_url: `${nextAuthUrl}/api/site/order/payment/payhere/validate`.trim(),
+      cancel_url: `${nextAuthUrl}/order-failed?orderId=${orderId}`.trim(),
+      notify_url: `${nextAuthUrl}/api/site/payment/payhere/notify`.trim(),
       order_id: `ORD-${Date.now()}`,
       items: 'Order Payment'.trim(),
       currency: 'LKR'.trim(),
@@ -50,8 +70,11 @@ export const generatePayherePayment = async (order, amount) => {
       custom_2: ''
     }
 
-    params.hash = generateSignature(params)
-    return params
+    const hash = generateSignature(params)
+    return {
+      ...params,
+      hash
+    }
 
   } catch (error) {
     console.error('Error in generatePayherePayment:', error)

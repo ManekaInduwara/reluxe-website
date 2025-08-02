@@ -41,6 +41,7 @@ export function SizeGuidePopup({
   if (!sizeGuide?.active || !sizeGuide.sizeChart?.length) return null
 
   const convertedChart = useMemo(() => {
+    if (!sizeGuide.sizeChart) return [];
     return sizeGuide.sizeChart.map(item => ({
       ...item,
       values: {
@@ -63,7 +64,7 @@ export function SizeGuidePopup({
     if (sizeGuide.chartType === 'standard') return ['XS', 'S', 'M', 'L', 'XL', 'XXL']
     if (sizeGuide.chartType === 'alpha') return ['S', 'M', 'L']
     if (sizeGuide.chartType === 'custom') {
-      return sizeGuide.sizeChart[0]?.values.customSizes?.map(size => size.label) || []
+      return sizeGuide.sizeChart?.[0]?.values.customSizes?.map(size => size.label) || []
     }
     return ['28', '30', '32', '34', '36', '38', '40', '42']
   }, [sizeGuide])
@@ -109,7 +110,7 @@ export function SizeGuidePopup({
               <Label className="text-gray-400">MEASUREMENT UNITS</Label>
               <Tabs
                 value={unit}
-                onValueChange={(value: 'in' | 'cm') => setUnit(value)}
+                onValueChange={(value) => setUnit(value as 'in' | 'cm')}
                 className="w-[180px]"
               >
                 <TabsList className="bg-gray-900 border border-gray-800 text-white">
@@ -147,9 +148,10 @@ export function SizeGuidePopup({
                           sizeGuide.chartType === 'custom'
                             ? item.values.customSizes?.[i]?.value
                             : item.values[label as keyof typeof item.values]
+                        const displayValue = typeof value === 'string' ? value : value?.toString() || '-'
                         return (
                           <TableCell key={i} className="text-center py-4 text-white">
-                            {value || '-'}
+                            {displayValue}
                           </TableCell>
                         )
                       })}
@@ -179,7 +181,7 @@ export function SizeGuidePopup({
   )
 }
 
-function convertMeasurement(value?: string, toUnit: 'in' | 'cm'): string | undefined {
+function convertMeasurement(value: string | undefined, toUnit: 'in' | 'cm'): string | undefined {
   if (!value) return undefined
 
   if (toUnit === 'cm' && (value.includes('"') || /in\b/i.test(value))) {

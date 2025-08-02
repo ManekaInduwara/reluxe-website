@@ -18,7 +18,7 @@ export const ratingSchema = {
       name: 'value',
       title: 'Rating Value',
       type: 'number',
-      validation: Rule => Rule.min(1).max(5).integer().required(),
+      validation: (Rule: any) => Rule.min(1).max(5).integer().required(),
     },
   ],
 };

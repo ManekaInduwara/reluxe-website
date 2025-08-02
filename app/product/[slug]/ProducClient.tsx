@@ -94,11 +94,16 @@ export default function ProductClient({ data }: { data: any }) {
   const handleAddToCart = async () => {
     if (!selectedColor || (currentColor?.sizes?.length && !selectedSize)) {
       setShowValidation(true)
-      gsap.to(containerRef.current, {
-        x: [-5, 5, -5, 5, 0],
-        duration: 0.4,
-        ease: "power1.out"
-      })
+      gsap.fromTo(containerRef.current, 
+        { x: 0 },
+        { 
+          x: -5,
+          duration: 0.1,
+          repeat: 3,
+          yoyo: true,
+          ease: "power1.out"
+        }
+      )
       return
     }
 
@@ -169,11 +174,16 @@ export default function ProductClient({ data }: { data: any }) {
   const handleBuyNow = async () => {
     if (!selectedColor || (currentColor?.sizes?.length && !selectedSize)) {
       setShowValidation(true)
-      gsap.to(containerRef.current, {
-        x: [-5, 5, -5, 5, 0],
-        duration: 0.4,
-        ease: "power1.out"
-      })
+      gsap.fromTo(containerRef.current, 
+        { x: 0 },
+        { 
+          x: -5,
+          duration: 0.1,
+          repeat: 3,
+          yoyo: true,
+          ease: "power1.out"
+        }
+      )
       return
     }
 
@@ -363,9 +373,7 @@ export default function ProductClient({ data }: { data: any }) {
                 <ReadMore
                   text={data.description}
                   className="text-gray-300 leading-relaxed"
-                  maxChars={200}
-                  expandIcon={<ChevronDown className="w-5 h-5 ml-1" />}
-                  collapseIcon={<ChevronUp className="w-5 h-5 ml-1" />} />
+                  maxLength={200} />
               </div>
             )}
 

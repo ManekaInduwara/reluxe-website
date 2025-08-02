@@ -10,7 +10,7 @@ import reluxe from '@/app/reluxe_black.png'
 export default function CountdownPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const redirectPath = searchParams.get('redirect') || '/'
+  const redirectPath = searchParams?.get('redirect') || '/'
   const containerRef = useRef<HTMLDivElement>(null)
   const clockRef = useRef<SVGSVGElement>(null)
 

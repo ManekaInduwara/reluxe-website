@@ -185,8 +185,15 @@ export function ProductFeedbackSection({
       });
 
       // Add to local state with createdAt
-      const feedbackWithDate = {
-        ...newFeedback,
+      const feedbackWithDate: Feedback = {
+        _id: newFeedback._id,
+        _type: 'feedback',
+        productId: newFeedback.productId,
+        userId: newFeedback.userId,
+        userName: newFeedback.userName,
+        userImage: newFeedback.userImage,
+        comment: newFeedback.comment,
+        rating: newFeedback.rating,
         createdAt: new Date().toISOString()
       };
       setFeedbacks([feedbackWithDate, ...feedbacks]);

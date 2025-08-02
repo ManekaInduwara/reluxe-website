@@ -36,7 +36,7 @@ export function MaintenanceToggle() {
         }
       } catch (error) {
         toast.error('Failed to fetch settings', {
-          description: error.message
+          description: error instanceof Error ? error.message : 'Unknown error'
         })
       } finally {
         setIsLoading(false)
@@ -79,7 +79,7 @@ export function MaintenanceToggle() {
       })
     } catch (error) {
       toast.error('Operation failed', {
-        description: error.message,
+        description: error instanceof Error ? error.message : 'Unknown error',
         icon: <AlertCircle className="h-4 w-4" />
       })
     } finally {
@@ -97,7 +97,7 @@ export function MaintenanceToggle() {
       })
     } catch (error) {
       toast.error('Preview failed', {
-        description: error.message
+        description: error instanceof Error ? error.message : 'Unknown error'
       })
     } finally {
       setIsTesting(false)
@@ -167,11 +167,9 @@ export function MaintenanceToggle() {
             </Tooltip>
           </Label>
           <DateTimePicker
-            id="end-time"
             value={endTime}
             onChange={setEndTime}
             className="bg-gray-800 border-gray-700"
-            disabled={isLoading}
           />
         </div>
 
