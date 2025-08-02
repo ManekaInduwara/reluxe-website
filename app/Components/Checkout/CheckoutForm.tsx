@@ -21,9 +21,12 @@ interface CartItem {
   title: string
   price: number
   quantity: number
-  color?: string
-  size?: string
-  image: string
+  color: string
+  size: string | null
+  image: string | { _id: string; url: string }
+  colorName: string
+  currentQuantity?: number
+  sizeQuantity?: number
 }
 
 interface CheckoutFormProps {

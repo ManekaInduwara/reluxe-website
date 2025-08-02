@@ -12,14 +12,17 @@ export default function CategoryLoading() {
 
     const ctx = gsap.context(() => {
       // Pulse animation for skeleton loader
-      gsap.to(skeletonRef.current?.querySelectorAll('.skeleton-item'), {
-        opacity: 0.6,
-        duration: 1,
-        repeat: -1,
-        yoyo: true,
-        stagger: 0.1,
-        ease: 'power1.inOut'
-      });
+      const skeletonItems = skeletonRef.current?.querySelectorAll('.skeleton-item');
+      if (skeletonItems) {
+        gsap.to(skeletonItems, {
+          opacity: 0.6,
+          duration: 1,
+          repeat: -1,
+          yoyo: true,
+          stagger: 0.1,
+          ease: 'power1.inOut'
+        });
+      }
     }, skeletonRef);
 
     return () => ctx.revert();

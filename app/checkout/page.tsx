@@ -25,10 +25,10 @@ export default function CheckoutPage() {
       patch: {
         id: item.productId,
         set: {
-          [`colors[_key=="${item.color}"].quantity`]: (item.currentQuantity - item.quantity),
+          [`colors[_key=="${item.color}"].quantity`]: ((item.currentQuantity || 0) - item.quantity),
           ...(item.size && {
             [`colors[_key=="${item.color}"].sizes[size=="${item.size}"].quantity`]:
-              (item.sizeQuantity - item.quantity)
+              ((item.sizeQuantity || 0) - item.quantity)
           })
         }
       }

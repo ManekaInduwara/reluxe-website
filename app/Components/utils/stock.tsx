@@ -5,10 +5,12 @@ interface CartItem {
   title: string;
   price: number;
   quantity: number;
-  color?: string; // This should be the color _key
-  colorName?: string; // Add this if you need the display name
-  size?: string;
-  image: string;
+  color: string; // This should be the color _key
+  colorName: string; // Add this if you need the display name
+  size: string | null;
+  image: string | { _id: string; url: string };
+  currentQuantity?: number;
+  sizeQuantity?: number;
 }
 
 export const reduceStock = async (cartItems: CartItem[]) => {

@@ -49,8 +49,7 @@ defineField({
       name: 'mainImages',
       title: 'Main Product Images',
       type: 'array',
-      of: [{ type: 'image' }],
-      options: { hotspot: true },
+      of: [{ type: 'image', options: { hotspot: true } }],
       validation: (Rule) => Rule.required().min(1).max(6),
     }),
     defineField({
