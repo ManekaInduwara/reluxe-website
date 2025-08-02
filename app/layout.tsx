@@ -12,11 +12,6 @@ import GsapScroll from "./Components/GsapScroll";
 import { Toaster } from 'sonner'
 import CustomCursor from "./Components/CustomCursor";
 
-import dynamic from 'next/dynamic';
-const MotionDiv = dynamic(() => import('framer-motion').then((mod) => mod.motion.div), {
-  ssr: false
-});
-
 const poppins = Poppins({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700'],
