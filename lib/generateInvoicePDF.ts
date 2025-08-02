@@ -1,5 +1,4 @@
 import PDFDocument from 'pdfkit';
-import getStream from 'get-stream';
 
 export async function generateInvoicePDF(order: any): Promise<Buffer> {
   const doc = new PDFDocument({ margin: 40 });
@@ -24,6 +23,15 @@ export async function generateInvoicePDF(order: any): Promise<Buffer> {
 
   doc.end();
 
-  const buffer = await getStream.buffer(doc);
-  return buffer;
+  const chunks: Buffer[] = [];
+  doc.on('data', (chunk) => {
+    chunks.push(chunk);
+  });
+  
+  return new Promise((resolve, reject) => {
+    doc.on('end', () => {
+      resolve(Buffer.concat(chunks));
+    });
+    doc.on('error', reject);
+  });
 }

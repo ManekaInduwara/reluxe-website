@@ -89,7 +89,7 @@ export default function NavbarWithSubcategories() {
                 />
                 
                 {/* Active indicator */}
-                {pathname.startsWith(`/${main.toLowerCase()}`) && (
+                {pathname && pathname.startsWith(`/${main.toLowerCase()}`) && (
                   <motion.span 
                     className="absolute bottom-0 left-0 w-full h-0.5 bg-white"
                     layoutId="activeIndicator"

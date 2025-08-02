@@ -29,7 +29,7 @@ export default {
       title: 'maintenanceMode',
       subtitle: 'maintenanceMessage'
     },
-    prepare({ title, subtitle }) {
+    prepare({ title, subtitle }: { title: any; subtitle: any }) {
       return {
         title: `Maintenance Mode: ${title ? 'ON' : 'OFF'}`,
         subtitle: subtitle || 'No message set'

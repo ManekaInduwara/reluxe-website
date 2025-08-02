@@ -31,12 +31,12 @@ export async function POST(request: Request) {
     const localMd5 = crypto
       .createHash('md5')
       .update(
-        merchant_id +
-          order_id +
-          payment_id +
-          payhere_amount +
-          payhere_currency +
-          status_code +
+        String(merchant_id) +
+          String(order_id) +
+          String(payment_id) +
+          String(payhere_amount) +
+          String(payhere_currency) +
+          String(status_code) +
           crypto
             .createHash('md5')
             .update(merchantSecret)

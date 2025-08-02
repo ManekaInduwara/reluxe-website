@@ -66,17 +66,19 @@ async function getCategoryProducts(slug: string): Promise<{
 export default async function CategoryPage({
   params,
 }: {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
 }) {
-  if (!params?.slug) {
+  const resolvedParams = await params;
+  
+  if (!resolvedParams?.slug) {
     return <CategoryNotFound />;
   }
 
-  const { products, categoryName, exists } = await getCategoryProducts(params.slug);
+  const { products, categoryName, exists } = await getCategoryProducts(resolvedParams.slug);
 
   if (!exists) {
     // Pass the attempted slug to show in the not found message
-    return <CategoryNotFound attemptedSlug={params.slug} />;
+    return <CategoryNotFound attemptedSlug={resolvedParams.slug} />;
   }
 
   if (products.length === 0) {

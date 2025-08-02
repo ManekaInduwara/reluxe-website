@@ -280,7 +280,7 @@ export default function SimilarProducts({
           {products.map((product, index) => (
             <div
               key={product._id}
-              ref={el => productRefs.current[index] = el}
+              ref={el => { productRefs.current[index] = el; }}
               className="product-card relative rounded-xl overflow-hidden bg-neutral-900 border border-neutral-800 transition-all duration-300 hover:border-white/50 hover:shadow-xl hover:shadow-white/5"
               onClick={() => toggleQuickView(product._id)}
             >

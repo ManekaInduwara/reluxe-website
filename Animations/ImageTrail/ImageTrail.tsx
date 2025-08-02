@@ -1231,7 +1231,7 @@ interface ImageTrailProps {
 export default function ImageTrail({
   items = [],
   variant = 1,
-}: ImageTrailProps): JSX.Element {
+}: ImageTrailProps) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

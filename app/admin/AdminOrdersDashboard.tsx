@@ -20,7 +20,7 @@ import {
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { Bar, Line } from 'react-chartjs-2'
+import { Bar, Line, Chart } from 'react-chartjs-2'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -462,7 +462,7 @@ export default function AdminOrdersDashboard() {
               </div>
             </CardHeader>
             <CardContent className="h-80">
-              <Bar data={orderTrendsChartData} options={chartOptions} />
+              <Chart type="bar" data={orderTrendsChartData} options={chartOptions} />
             </CardContent>
           </Card>
 

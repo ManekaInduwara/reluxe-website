@@ -1,16 +1,16 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { Clock } from 'lucide-react'
 import gsap from 'gsap'
 import Image from 'next/image'
 import reluxe from '@/app/reluxe_black.png'
 
-export default function CountdownPage() {
+function CountdownContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const redirectPath = searchParams.get('redirect') || '/'
+  const redirectPath = searchParams?.get('redirect') || '/'
   const containerRef = useRef<HTMLDivElement>(null)
   const clockRef = useRef<SVGSVGElement>(null)
 
@@ -148,5 +148,50 @@ alt={''} />
         </div>
       </div>
     </div>
+  )
+}
+
+function CountdownFallback() {
+  return (
+    <div className="font-[family-name:var(--font-poppins)] min-h-screen flex flex-col items-center justify-center bg-black text-white p-4 text-center relative overflow-hidden">
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-1/4 left-1/4 w-40 h-40 rounded-full bg-gray-800 blur-3xl"></div>
+        <div className="absolute bottom-1/3 right-1/4 w-60 h-60 rounded-full bg-gray-700 blur-3xl"></div>
+      </div>
+      <Image src={reluxe} width={500} height={500} alt={''} />
+      <div className="max-w-md space-y-6 relative z-10">
+        <div className="flex justify-center">
+          <Clock className="h-16 w-16 text-gray-300" />
+        </div>
+        <h1 className="text-4xl font-bold">Coming Soon</h1>
+        <p className="text-lg text-gray-400">We're preparing something amazing!</p>
+        <div className="grid grid-cols-4 gap-4 pt-6">
+          <div className="flex flex-col items-center bg-gray-900 p-4 rounded-lg border border-gray-800">
+            <span className="text-3xl font-bold text-white">--</span>
+            <span className="text-xs mt-1 text-gray-400">DAYS</span>
+          </div>
+          <div className="flex flex-col items-center bg-gray-900 p-4 rounded-lg border border-gray-800">
+            <span className="text-3xl font-bold text-white">--</span>
+            <span className="text-xs mt-1 text-gray-400">HOURS</span>
+          </div>
+          <div className="flex flex-col items-center bg-gray-900 p-4 rounded-lg border border-gray-800">
+            <span className="text-3xl font-bold text-white">--</span>
+            <span className="text-xs mt-1 text-gray-400">MINUTES</span>
+          </div>
+          <div className="flex flex-col items-center bg-gray-900 p-4 rounded-lg border border-gray-800">
+            <span className="text-3xl font-bold text-white">--</span>
+            <span className="text-xs mt-1 text-gray-400">SECONDS</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default function CountdownPage() {
+  return (
+    <Suspense fallback={<CountdownFallback />}>
+      <CountdownContent />
+    </Suspense>
   )
 }
