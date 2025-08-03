@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { client } from '@/sanity/lib/client'
 import { Loader2, Download, ChevronDown, ChevronUp, Truck, CheckCircle, Clock, XCircle, Mail, Trash2, Package, CreditCard, User, Star, Crown, Award, AlertTriangle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -31,12 +31,13 @@ import {
   Legend,
   PointElement,
   LineElement,
+  Filler,
 } from 'chart.js'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { MaintenanceToggle } from './Maintance'
 import ProductQuantities from './QuantityProducts'
 
-// Register ChartJS components
+// Register ChartJS components - Fixed registration order
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -45,7 +46,8 @@ ChartJS.register(
   Tooltip,
   Legend,
   PointElement,
-  LineElement
+  LineElement,
+  Filler
 )
 
 const STATUS_OPTIONS = ['pending', 'processing', 'shipped', 'delivered', 'cancelled']
@@ -120,29 +122,46 @@ export default function AdminOrdersDashboard() {
     }
   };
 
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     setLoading(true)
     try {
       const data = await client.fetch(`*[_type == "order"] | order(_createdAt desc)`)
+      
+      if (!Array.isArray(data)) {
+        console.error('Invalid data received from Sanity:', data)
+        toast.error('Failed to load orders: Invalid data format')
+        return
+      }
+      
       setOrders(data)
       
-      // Calculate summary
-      const revenue = data.reduce((sum: number, order: any) => sum + order.total, 0)
-      const shippingCost = data.reduce((sum: number, order: any) => sum + (order.shippingCost || 375), 0)
+      // Calculate summary with error handling
+      const revenue = data.reduce((sum: number, order: any) => {
+        const orderTotal = parseFloat(order.total) || 0
+        return sum + orderTotal
+      }, 0)
+      
+      const shippingCost = data.reduce((sum: number, order: any) => {
+        const shipping = parseFloat(order.shippingCost) || 375
+        return sum + shipping
+      }, 0)
+      
       const revenueWithoutShipping = revenue - shippingCost
       
-      // Group orders by customer email
+      // Group orders by customer email with error handling
       const customerMap = new Map<string, {count: number, total: number}>()
       data.forEach((order: any) => {
-        const email = order.customer.email
+        const email = order.customer?.email || 'unknown@email.com'
+        const orderTotal = parseFloat(order.total) || 0
+        
         if (customerMap.has(email)) {
           const customer = customerMap.get(email)!
           customerMap.set(email, {
             count: customer.count + 1,
-            total: customer.total + order.total
+            total: customer.total + orderTotal
           })
         } else {
-          customerMap.set(email, {count: 1, total: order.total})
+          customerMap.set(email, {count: 1, total: orderTotal})
         }
       })
       
@@ -172,10 +191,33 @@ export default function AdminOrdersDashboard() {
         loyalCustomers,
         orderTrends: trends
       })
+    } catch (error) {
+      console.error('Error fetching orders:', error)
+      toast.error('Failed to load orders. Please try again.')
+      setOrders([])
+      setSummary({
+        totalOrders: 0,
+        totalRevenue: 0,
+        totalRevenueWithoutShipping: 0,
+        totalShippingCost: 0,
+        statusCounts: {
+          pending: 0,
+          processing: 0,
+          shipped: 0,
+          delivered: 0,
+          cancelled: 0,
+        },
+        loyalCustomers: [],
+        orderTrends: {
+          labels: [],
+          orderCounts: [],
+          revenue: [],
+        }
+      })
     } finally {
       setLoading(false)
     }
-  }
+  }, [timeRange])
 
   const calculateOrderTrends = (orders: any[], range: TimeRange) => {
     const now = new Date()
@@ -330,39 +372,46 @@ export default function AdminOrdersDashboard() {
 
   useEffect(() => {
     fetchOrders()
-  }, [])
+  }, [fetchOrders])
 
   // Chart data configuration
   const orderTrendsChartData = {
-    labels: summary.orderTrends.labels,
+    labels: summary.orderTrends.labels || [],
     datasets: [
       {
         label: 'Order Count',
-        data: summary.orderTrends.orderCounts,
+        data: summary.orderTrends.orderCounts || [],
         backgroundColor: 'rgba(99, 102, 241, 0.6)',
         borderColor: 'rgba(99, 102, 241, 1)',
         borderWidth: 1,
         yAxisID: 'y',
+        type: 'bar' as const,
       },
       {
         label: 'Revenue (LKR)',
-        data: summary.orderTrends.revenue,
+        data: summary.orderTrends.revenue || [],
         backgroundColor: 'rgba(16, 185, 129, 0.6)',
         borderColor: 'rgba(16, 185, 129, 1)',
-        borderWidth: 1,
+        borderWidth: 2,
         yAxisID: 'y1',
         type: 'line' as const,
+        fill: false,
       }
     ]
   }
 
   const chartOptions = {
     responsive: true,
+    interaction: {
+      mode: 'index' as const,
+      intersect: false,
+    },
     plugins: {
       legend: {
         position: 'top' as const,
         labels: {
           color: '#e5e7eb',
+          usePointStyle: true,
         }
       },
       title: {
@@ -370,6 +419,11 @@ export default function AdminOrdersDashboard() {
         text: `Order Trends by ${timeRange.charAt(0).toUpperCase() + timeRange.slice(1)}`,
         color: '#e5e7eb',
       },
+      tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        titleColor: '#e5e7eb',
+        bodyColor: '#e5e7eb',
+      }
     },
     scales: {
       x: {
@@ -389,6 +443,11 @@ export default function AdminOrdersDashboard() {
         },
         ticks: {
           color: '#9ca3af',
+        },
+        title: {
+          display: true,
+          text: 'Order Count',
+          color: '#9ca3af',
         }
       },
       y1: {
@@ -401,8 +460,13 @@ export default function AdminOrdersDashboard() {
         },
         ticks: {
           color: '#9ca3af',
+        },
+        title: {
+          display: true,
+          text: 'Revenue (LKR)',
+          color: '#9ca3af',
         }
-      },
+      }
     },
     maintainAspectRatio: false,
   }
@@ -462,7 +526,33 @@ export default function AdminOrdersDashboard() {
               </div>
             </CardHeader>
             <CardContent className="h-80">
-              <Chart type="bar" data={orderTrendsChartData} options={chartOptions} />
+              {summary.orderTrends.labels.length > 0 ? (
+                <div className="w-full h-full">
+                  {(() => {
+                    try {
+                      return <Chart type="bar" data={orderTrendsChartData} options={chartOptions} />
+                    } catch (error) {
+                      console.error('Chart rendering error:', error)
+                      return (
+                        <div className="flex items-center justify-center h-full text-gray-500">
+                          <div className="text-center">
+                            <AlertTriangle className="h-12 w-12 mx-auto mb-2 text-yellow-400" />
+                            <p>Chart could not be loaded</p>
+                            <p className="text-sm">Please refresh the page</p>
+                          </div>
+                        </div>
+                      )
+                    }
+                  })()}
+                </div>
+              ) : (
+                <div className="flex items-center justify-center h-full text-gray-500">
+                  <div className="text-center">
+                    <Package className="h-12 w-12 mx-auto mb-2 text-gray-400" />
+                    <p>No order data available for the selected time range</p>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
