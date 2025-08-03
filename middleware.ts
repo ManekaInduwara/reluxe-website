@@ -18,7 +18,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // Set countdown end date (must match client-side)
-  const COUNTDOWN_END = new Date('2024-08-08T23:59:59Z').getTime()
+  const COUNTDOWN_END = new Date('2025-08-08T23:59:59Z').getTime()
   const now = Date.now()
 
   // If countdown is over, allow access to requested page
