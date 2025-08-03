@@ -31,6 +31,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
 
+  // Check if Clerk is properly configured
+  const clerkPublishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+
   return (
     <html lang="en" className="scroll-smooth">
       <head>
@@ -69,32 +72,73 @@ export default function RootLayout({
         }} />
       </head>
       <body className={`${poppins.variable} antialiased bg-black text-white`}>
-        <ClerkProvider>
-           <GsapScroll>
-              <Toaster 
-                richColors 
-                position="top-right" 
-                toastOptions={{
-                  style: {
-                    background: '#0a0a0a',
-                    border: '1px solid #262626',
-                    color: '#f5f5f5',
-                    fontFamily: 'var(--font-poppins)'
-                  }
-                }} 
-              />
-          
-              <CartProvider>
-               <ClientLayout>
-                <main className="min-h-screen">
-                  {children}
-                </main>
-                </ClientLayout>
+        {clerkPublishableKey ? (
+          <ClerkProvider
+            publishableKey={clerkPublishableKey}
+            appearance={{
+              baseTheme: undefined,
+              variables: {
+                colorPrimary: '#b91c1c',
+                colorBackground: '#0a0a0a',
+                colorText: '#ffffff',
+                colorTextSecondary: '#9ca3af',
+                colorInputBackground: '#1f2937',
+                colorInputText: '#ffffff',
+              },
+            }}
+          >
+             <GsapScroll>
+                <Toaster 
+                  richColors 
+                  position="top-right" 
+                  toastOptions={{
+                    style: {
+                      background: '#0a0a0a',
+                      border: '1px solid #262626',
+                      color: '#f5f5f5',
+                      fontFamily: 'var(--font-poppins)'
+                    }
+                  }} 
+                />
             
-              </CartProvider>
+                <CartProvider>
+                 <ClientLayout>
+                  <main className="min-h-screen">
+                    {children}
+                  </main>
+                  </ClientLayout>
+              
+                </CartProvider>
 
-            </GsapScroll>
-        </ClerkProvider>
+              </GsapScroll>
+          </ClerkProvider>
+        ) : (
+          // Fallback when Clerk is not configured
+          <GsapScroll>
+            <Toaster 
+              richColors 
+              position="top-right" 
+              toastOptions={{
+                style: {
+                  background: '#0a0a0a',
+                  border: '1px solid #262626',
+                  color: '#f5f5f5',
+                  fontFamily: 'var(--font-poppins)'
+                }
+              }} 
+            />
+        
+            <CartProvider>
+             <ClientLayout>
+              <main className="min-h-screen">
+                {children}
+              </main>
+              </ClientLayout>
+          
+            </CartProvider>
+
+          </GsapScroll>
+        )}
       </body>
     </html>
   );
