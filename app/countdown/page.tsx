@@ -14,7 +14,7 @@ function CountdownContent() {
   const containerRef = useRef<HTMLDivElement>(null)
   const clockRef = useRef<SVGSVGElement>(null)
 
-  const TARGET_DATE = new Date('2025-08-08T23:59:59Z').getTime()
+  const TARGET_DATE = new Date('2025-08-07T23:59:59Z').getTime()
   const [timeLeft, setTimeLeft] = useState({
     days: '00',
     hours: '00',
