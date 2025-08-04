@@ -20,7 +20,7 @@ import {
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { Bar } from 'react-chartjs-2'
+import { Chart } from 'react-chartjs-2'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -328,80 +328,6 @@ export default function AdminOrdersDashboard() {
     return { labels, orderCounts, revenue }
   }
 
-  const orderTrendsChartData: ChartData<'bar'> = {
-    labels: summary.orderTrends.labels,
-    datasets: [
-      {
-        label: 'Order Count',
-        data: summary.orderTrends.orderCounts,
-        backgroundColor: 'rgba(99, 102, 241, 0.6)',
-        borderColor: 'rgba(99, 102, 241, 1)',
-        borderWidth: 1,
-        yAxisID: 'y',
-      },
-      {
-        label: 'Revenue (LKR)',
-        data: summary.orderTrends.revenue,
-        backgroundColor: 'rgba(16, 185, 129, 0.6)',
-        borderColor: 'rgba(16, 185, 129, 1)',
-        borderWidth: 1,
-        yAxisID: 'y1',
-        type: 'line',
-      }
-    ]
-  }
-
-  const chartOptions: ChartOptions<'bar'> = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: 'top',
-        labels: {
-          color: '#e5e7eb',
-        }
-      },
-      title: {
-        display: true,
-        text: `Order Trends by ${timeRange.charAt(0).toUpperCase() + timeRange.slice(1)}`,
-        color: '#e5e7eb',
-      },
-    },
-    scales: {
-      x: {
-        grid: {
-          color: 'rgba(55, 65, 81, 0.5)'
-        },
-        ticks: {
-          color: '#9ca3af',
-        }
-      },
-      y: {
-        type: 'linear',
-        display: true,
-        position: 'left',
-        grid: {
-          color: 'rgba(55, 65, 81, 0.5)'
-        },
-        ticks: {
-          color: '#9ca3af',
-        }
-      },
-      y1: {
-        type: 'linear',
-        display: true,
-        position: 'right',
-        grid: {
-          drawOnChartArea: false,
-          color: 'rgba(55, 65, 81, 0.5)'
-        },
-        ticks: {
-          color: '#9ca3af',
-        }
-      },
-    },
-    maintainAspectRatio: false,
-  }
-
   const downloadAllOrders = () => {
     window.open('/api/admin/orders-report', '_blank')
   }
@@ -464,6 +390,85 @@ export default function AdminOrdersDashboard() {
     }))
   }
 
+  const chartData: ChartData<'bar' | 'line'> = {
+    labels: summary.orderTrends.labels,
+    datasets: [
+      {
+        type: 'bar' as const,
+        label: 'Order Count',
+        data: summary.orderTrends.orderCounts,
+        backgroundColor: 'rgba(99, 102, 241, 0.6)',
+        borderColor: 'rgba(99, 102, 241, 1)',
+        borderWidth: 1,
+        yAxisID: 'y',
+      },
+      {
+        type: 'line' as const,
+        label: 'Revenue (LKR)',
+        data: summary.orderTrends.revenue,
+        backgroundColor: 'rgba(16, 185, 129, 0.6)',
+        borderColor: 'rgba(16, 185, 129, 1)',
+        borderWidth: 1,
+        yAxisID: 'y1',
+      }
+    ]
+  }
+
+  const chartOptions: ChartOptions<'bar' | 'line'> = {
+    responsive: true,
+    interaction: {
+      mode: 'index',
+      intersect: false,
+    },
+    plugins: {
+      legend: {
+        position: 'top',
+        labels: {
+          color: '#e5e7eb',
+        }
+      },
+      title: {
+        display: true,
+        text: `Order Trends by ${timeRange.charAt(0).toUpperCase() + timeRange.slice(1)}`,
+        color: '#e5e7eb',
+      },
+    },
+    scales: {
+      x: {
+        grid: {
+          color: 'rgba(55, 65, 81, 0.5)'
+        },
+        ticks: {
+          color: '#9ca3af',
+        }
+      },
+      y: {
+        type: 'linear',
+        display: true,
+        position: 'left',
+        grid: {
+          color: 'rgba(55, 65, 81, 0.5)'
+        },
+        ticks: {
+          color: '#9ca3af',
+        }
+      },
+      y1: {
+        type: 'linear',
+        display: true,
+        position: 'right',
+        grid: {
+          drawOnChartArea: false,
+          color: 'rgba(55, 65, 81, 0.5)'
+        },
+        ticks: {
+          color: '#9ca3af',
+        }
+      },
+    },
+    maintainAspectRatio: false,
+  }
+
   useEffect(() => {
     fetchOrders()
   }, [])
@@ -523,7 +528,7 @@ export default function AdminOrdersDashboard() {
               </div>
             </CardHeader>
             <CardContent className="h-80">
-              <Bar data={orderTrendsChartData} options={chartOptions} />
+              <Chart type='bar' data={chartData} options={chartOptions} />
             </CardContent>
           </Card>
 
