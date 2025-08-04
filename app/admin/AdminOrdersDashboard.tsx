@@ -170,31 +170,7 @@ export default function AdminOrdersDashboard() {
     }
   })
 
-  // Fix for Clerk.js loading issue
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const script = document.createElement('script')
-      script.src = 'https://cdn.jsdelivr.net/npm/@clerk/clerk-js@5/dist/clerk.browser.js'
-      script.async = true
-      script.onload = () => {
-        if (window.Clerk) {
-          window.Clerk.load({
-            publishableKey: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
-          }).catch(error => {
-            console.error('Failed to load Clerk:', error)
-          })
-        }
-      }
-      script.onerror = () => {
-        console.error('Failed to load Clerk script')
-      }
-      document.body.appendChild(script)
-      
-      return () => {
-        document.body.removeChild(script)
-      }
-    }
-  }, [])
+
 
   const toggleMaintenanceMode = async () => {
     try {
