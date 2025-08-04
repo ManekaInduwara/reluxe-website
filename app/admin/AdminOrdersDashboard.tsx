@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { client } from '@/sanity/lib/client'
-import { Loader2, Download, ChevronDown, ChevronUp, Truck, CheckCircle, Clock, XCircle, Mail, Trash2, Package, CreditCard, User, Star, Crown, Award, AlertTriangle } from 'lucide-react'
+import { Loader2, Download, ChevronDown, ChevronUp, Truck, CheckCircle, Clock, XCircle, Mail, Trash2, Package, CreditCard, User, Star, Crown, Award } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -20,7 +20,7 @@ import {
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { Bar, Line } from 'react-chartjs-2'
+import { Bar } from 'react-chartjs-2'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -32,6 +32,7 @@ import {
   PointElement,
   LineElement,
 } from 'chart.js'
+import type { ChartData, ChartOptions } from 'chart.js'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { MaintenanceToggle } from './Maintance'
 import ProductQuantities from './QuantityProducts'
@@ -188,13 +189,13 @@ export default function AdminOrdersDashboard() {
       setOrders(data)
       
       // Calculate summary
-      const revenue = data.reduce((sum: number, order: Order) => sum + order.total, 0)
-      const shippingCost = data.reduce((sum: number, order: Order) => sum + (order.shippingCost || 375), 0)
+      const revenue = data.reduce((sum, order) => sum + order.total, 0)
+      const shippingCost = data.reduce((sum, order) => sum + (order.shippingCost || 375), 0)
       const revenueWithoutShipping = revenue - shippingCost
       
       // Group orders by customer email
       const customerMap = new Map<string, {count: number, total: number}>()
-      data.forEach((order: Order) => {
+      data.forEach((order) => {
         const email = order.customer.email
         if (customerMap.has(email)) {
           const customer = customerMap.get(email)!
@@ -217,11 +218,11 @@ export default function AdminOrdersDashboard() {
       const trends = calculateOrderTrends(data, timeRange)
       
       const statusCounts = {
-        pending: data.filter((order: Order) => order.status === 'pending').length,
-        processing: data.filter((order: Order) => order.status === 'processing').length,
-        shipped: data.filter((order: Order) => order.status === 'shipped').length,
-        delivered: data.filter((order: Order) => order.status === 'delivered').length,
-        cancelled: data.filter((order: Order) => order.status === 'cancelled').length,
+        pending: data.filter((order) => order.status === 'pending').length,
+        processing: data.filter((order) => order.status === 'processing').length,
+        shipped: data.filter((order) => order.status === 'shipped').length,
+        delivered: data.filter((order) => order.status === 'delivered').length,
+        cancelled: data.filter((order) => order.status === 'cancelled').length,
       }
       
       setSummary({
@@ -327,6 +328,80 @@ export default function AdminOrdersDashboard() {
     return { labels, orderCounts, revenue }
   }
 
+  const orderTrendsChartData: ChartData<'bar'> = {
+    labels: summary.orderTrends.labels,
+    datasets: [
+      {
+        label: 'Order Count',
+        data: summary.orderTrends.orderCounts,
+        backgroundColor: 'rgba(99, 102, 241, 0.6)',
+        borderColor: 'rgba(99, 102, 241, 1)',
+        borderWidth: 1,
+        yAxisID: 'y',
+      },
+      {
+        label: 'Revenue (LKR)',
+        data: summary.orderTrends.revenue,
+        backgroundColor: 'rgba(16, 185, 129, 0.6)',
+        borderColor: 'rgba(16, 185, 129, 1)',
+        borderWidth: 1,
+        yAxisID: 'y1',
+        type: 'line',
+      }
+    ]
+  }
+
+  const chartOptions: ChartOptions<'bar'> = {
+    responsive: true,
+    plugins: {
+      legend: {
+        position: 'top',
+        labels: {
+          color: '#e5e7eb',
+        }
+      },
+      title: {
+        display: true,
+        text: `Order Trends by ${timeRange.charAt(0).toUpperCase() + timeRange.slice(1)}`,
+        color: '#e5e7eb',
+      },
+    },
+    scales: {
+      x: {
+        grid: {
+          color: 'rgba(55, 65, 81, 0.5)'
+        },
+        ticks: {
+          color: '#9ca3af',
+        }
+      },
+      y: {
+        type: 'linear',
+        display: true,
+        position: 'left',
+        grid: {
+          color: 'rgba(55, 65, 81, 0.5)'
+        },
+        ticks: {
+          color: '#9ca3af',
+        }
+      },
+      y1: {
+        type: 'linear',
+        display: true,
+        position: 'right',
+        grid: {
+          drawOnChartArea: false,
+          color: 'rgba(55, 65, 81, 0.5)'
+        },
+        ticks: {
+          color: '#9ca3af',
+        }
+      },
+    },
+    maintainAspectRatio: false,
+  }
+
   const downloadAllOrders = () => {
     window.open('/api/admin/orders-report', '_blank')
   }
@@ -392,81 +467,6 @@ export default function AdminOrdersDashboard() {
   useEffect(() => {
     fetchOrders()
   }, [])
-
-  // Chart data configuration
-  const orderTrendsChartData = {
-    labels: summary.orderTrends.labels,
-    datasets: [
-      {
-        label: 'Order Count',
-        data: summary.orderTrends.orderCounts,
-        backgroundColor: 'rgba(99, 102, 241, 0.6)',
-        borderColor: 'rgba(99, 102, 241, 1)',
-        borderWidth: 1,
-        yAxisID: 'y',
-      },
-      {
-        label: 'Revenue (LKR)',
-        data: summary.orderTrends.revenue,
-        backgroundColor: 'rgba(16, 185, 129, 0.6)',
-        borderColor: 'rgba(16, 185, 129, 1)',
-        borderWidth: 1,
-        yAxisID: 'y1',
-        type: 'line' as const,
-      }
-    ]
-  }
-
-  const chartOptions = {
-    responsive: true,
-    plugins: {
-      legend: {
-        position: 'top' as const,
-        labels: {
-          color: '#e5e7eb',
-        }
-      },
-      title: {
-        display: true,
-        text: `Order Trends by ${timeRange.charAt(0).toUpperCase() + timeRange.slice(1)}`,
-        color: '#e5e7eb',
-      },
-    },
-    scales: {
-      x: {
-        grid: {
-          color: 'rgba(55, 65, 81, 0.5)'
-        },
-        ticks: {
-          color: '#9ca3af',
-        }
-      },
-      y: {
-        type: 'linear' as const,
-        display: true,
-        position: 'left' as const,
-        grid: {
-          color: 'rgba(55, 65, 81, 0.5)'
-        },
-        ticks: {
-          color: '#9ca3af',
-        }
-      },
-      y1: {
-        type: 'linear' as const,
-        display: true,
-        position: 'right' as const,
-        grid: {
-          drawOnChartArea: false,
-          color: 'rgba(55, 65, 81, 0.5)'
-        },
-        ticks: {
-          color: '#9ca3af',
-        }
-      },
-    },
-    maintainAspectRatio: false,
-  }
 
   return (
     <div className="min-h-screen bg-black text-white p-4 md:p-8 font-[family-name:var(--font-poppins)]">
@@ -651,7 +651,7 @@ export default function AdminOrdersDashboard() {
               </Card>
             ) : (
               orders.map(order => {
-                const itemCount = order.items?.reduce((t: number, item: OrderItem) => t + item.quantity, 0)
+                const itemCount = order.items?.reduce((t, item) => t + item.quantity, 0)
                 const statusColor = STATUS_COLORS[order.status]
                 const statusLabel = STATUS_LABELS[order.status]
 
@@ -817,7 +817,7 @@ export default function AdminOrdersDashboard() {
                                 Order Items ({itemCount})
                               </h3>
                               <div className="space-y-3">
-                                {order.items?.map((item: OrderItem) => (
+                                {order.items?.map((item) => (
                                   <div 
                                     key={`${item.productId}-${item.color}-${item.size}`} 
                                     className="p-3 bg-gray-800 rounded-md text-sm text-gray-300"
