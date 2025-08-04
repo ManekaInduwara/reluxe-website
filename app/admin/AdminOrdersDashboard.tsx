@@ -291,7 +291,7 @@ export default function AdminOrdersDashboard() {
                 <CardHeader>
                   <div className="flex justify-between">
                     <CardTitle>Analytics</CardTitle>
-                    <Select value={timeRange} onValueChange={setTimeRange}>
+                    <Select value={timeRange} onValueChange={(value) => setTimeRange(value as TimeRange)}>
                       <SelectTrigger className="w-[120px]">
                         <SelectValue />
                       </SelectTrigger>
