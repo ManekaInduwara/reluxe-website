@@ -3,7 +3,7 @@ import nodemailer from 'nodemailer'
 import { client } from '@/sanity/lib/client'
 import { groq } from 'next-sanity'
 
-// Define TypeScript interfaces for better type safety
+// TypeScript interfaces for type safety
 interface OrderItem {
   title: string
   color?: string
@@ -16,13 +16,15 @@ interface OrderItem {
   }
 }
 
+interface Customer {
+  email: string
+  name?: string
+}
+
 interface Order {
   _id: string
   _createdAt: string
-  customer: {
-    email: string
-    name?: string
-  }
+  customer: Customer
   items: OrderItem[]
   subtotal: number
   shipping: number
@@ -124,21 +126,25 @@ async function sendInvoiceEmail(to: string, order: Order) {
   const statusText = order.status ? order.status.charAt(0).toUpperCase() + order.status.slice(1) : 'Processing'
 
   const itemsTable = order.items.map((item, index) => {
+    const colorValue = getColorValue(item.color || '')
     const colorDisplay = item.color ? `
-      <div style="
-        display: inline-block;
-        width: 16px;
-        height: 16px;
-        background-color: ${getColorValue(item.color)};
-        border-radius: 50%;
-        border: 1px solid #ddd;
-      " title="${item.color}"></div>
+      <div style="display: flex; align-items: center; justify-content: center; gap: 5px;">
+        <div style="
+          display: inline-block;
+          width: 16px;
+          height: 16px;
+          background-color: ${colorValue};
+          border-radius: 50%;
+          border: 1px solid #ddd;
+        "></div>
+        <span style="font-size: 12px;">${item.color}</span>
+      </div>
     ` : '-'
 
     return `
       <tr>
-        <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: center;">${index + 1}</td>
-        <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">
+        <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: center; vertical-align: middle;">${index + 1}</td>
+        <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; vertical-align: middle;">
           <div style="display: flex; align-items: center; gap: 12px;">
             ${item.product?.mainImage ? `
               <img src="${item.product.mainImage}" alt="${item.title}" 
@@ -155,12 +161,12 @@ async function sendInvoiceEmail(to: string, order: Order) {
             </div>
           </div>
         </td>
-        <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: center;">
+        <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: center; vertical-align: middle;">
           ${colorDisplay}
         </td>
-        <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: center;">${item.size || '-'}</td>
-        <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: center;">${item.quantity}</td>
-        <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right;">LKR ${item.price.toFixed(2)}</td>
+        <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: center; vertical-align: middle;">${item.size || '-'}</td>
+        <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: center; vertical-align: middle;">${item.quantity}</td>
+        <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: right; vertical-align: middle;">LKR ${item.price.toFixed(2)}</td>
       </tr>
     `
   }).join('')
@@ -268,10 +274,10 @@ async function sendInvoiceEmail(to: string, order: Order) {
               <tr>
                 <th style="width: 5%;">#</th>
                 <th style="width: 45%;">Product</th>
-                <th style="width: 10%;">Color</th>
+                <th style="width: 15%;">Color</th>
                 <th style="width: 10%;">Size</th>
                 <th style="width: 10%;">Qty</th>
-                <th style="width: 20%; text-align: right;">Price</th>
+                <th style="width: 15%; text-align: right;">Price</th>
               </tr>
             </thead>
             <tbody>
@@ -314,13 +320,18 @@ async function sendInvoiceEmail(to: string, order: Order) {
   await transporter.sendMail(mailOptions)
 }
 
-// Helper function to get proper color value
+// Helper functions for color handling
 function getColorValue(color: string): string {
   if (!color) return '#cccccc'
   
-  // If it's already a valid hex or rgb
-  if (/^(#|rgb)/i.test(color)) {
+  // Check if it's already a valid hex
+  if (/^#([0-9A-F]{3}){1,2}$/i.test(color)) {
     return formatColor(color)
+  }
+  
+  // Check if it's rgb/rgba
+  if (/^rgba?\((\s*\d+\s*,\s*){2}\s*\d+\s*(,\s*[\d.]+\s*)?\)$/i.test(color)) {
+    return color
   }
   
   // Try to convert color name to hex
@@ -348,7 +359,7 @@ function colorNameToHex(color: string): string {
     'white': '#ffffff',
     'orange': '#ffa500',
     'purple': '#800080',
-    'pink': '#ffc0cb',
+    'pink': '#1aead9590ec1',
     'gray': '#808080',
     'grey': '#808080',
     'brown': '#a52a2a',
@@ -360,6 +371,25 @@ function colorNameToHex(color: string): string {
     'lime': '#00ff00',
     'aqua': '#00ffff',
     'fuchsia': '#ff00ff',
+    'gold': '#ffd700',
+    'indigo': '#4b0082',
+    'violet': '#ee82ee',
+    'coral': '#ff7f50',
+    'cyan': '#00ffff',
+    'magenta': '#ff00ff',
+    'beige': '#f5f5dc',
+    'lavender': '#e6e6fa',
+    'turquoise': '#40e0d0',
+    'salmon': '#fa8072',
+    'tan': '#d2b48c',
+    'plum': '#dda0dd',
+    'skyblue': '#87ceeb',
+    'khaki': '#f0e68c',
+    'crimson': '#dc143c',
+    // Add more colors as needed
   }
-  return colors[color.toLowerCase()] || '#cccccc'
+  
+  // Clean the color string (remove special characters and convert to lowercase)
+  const cleanColor = color.replace(/[^a-zA-Z]/g, '').toLowerCase()
+  return colors[cleanColor] || '#cccccc'
 }
