@@ -48,7 +48,70 @@ ChartJS.register(
   LineElement
 )
 
-const STATUS_OPTIONS = ['pending', 'processing', 'shipped', 'delivered', 'cancelled']
+type OrderStatus = 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled'
+type TimeRange = 'day' | 'week' | 'month' | 'year'
+
+interface OrderItem {
+  productId: string
+  title: string
+  price: number
+  quantity: number
+  color?: string
+  size?: string
+}
+
+interface Customer {
+  firstName: string
+  lastName: string
+  email: string
+  phone?: string
+  address: string
+  city: string
+  postalCode?: string
+}
+
+interface Order {
+  _id: string
+  _createdAt: string
+  status: OrderStatus
+  total: number
+  shippingCost?: number
+  paymentMethod: string
+  customer: Customer
+  items: OrderItem[]
+}
+
+interface StatusCounts {
+  pending: number
+  processing: number
+  shipped: number
+  delivered: number
+  cancelled: number
+}
+
+interface LoyalCustomer {
+  email: string
+  orderCount: number
+  totalSpent: number
+}
+
+interface OrderTrends {
+  labels: string[]
+  orderCounts: number[]
+  revenue: number[]
+}
+
+interface Summary {
+  totalOrders: number
+  totalRevenue: number
+  totalRevenueWithoutShipping: number
+  totalShippingCost: number
+  statusCounts: StatusCounts
+  loyalCustomers: LoyalCustomer[]
+  orderTrends: OrderTrends
+}
+
+const STATUS_OPTIONS: OrderStatus[] = ['pending', 'processing', 'shipped', 'delivered', 'cancelled']
 
 const STATUS_ICONS = {
   pending: <Clock className="h-4 w-4 text-yellow-500" />,
@@ -74,17 +137,15 @@ const STATUS_LABELS = {
   cancelled: 'Cancelled',
 }
 
-type TimeRange = 'day' | 'week' | 'month' | 'year'
-
 export default function AdminOrdersDashboard() {
-  const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const [maintenanceMode, setMaintenanceMode] = useState(false)
   const [activeTab, setActiveTab] = useState('orders')
-  const [orders, setOrders] = useState<any[]>([])
+  const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(false)
   const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null)
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null)
   const [timeRange, setTimeRange] = useState<TimeRange>('month')
-  const [summary, setSummary] = useState({
+  const [summary, setSummary] = useState<Summary>({
     totalOrders: 0,
     totalRevenue: 0,
     totalRevenueWithoutShipping: 0,
@@ -96,44 +157,44 @@ export default function AdminOrdersDashboard() {
       delivered: 0,
       cancelled: 0,
     },
-    loyalCustomers: [] as Array<{email: string, orderCount: number, totalSpent: number}>,
+    loyalCustomers: [],
     orderTrends: {
-      labels: [] as string[],
-      orderCounts: [] as number[],
-      revenue: [] as number[],
+      labels: [],
+      orderCounts: [],
+      revenue: [],
     }
   })
 
   const toggleMaintenanceMode = async () => {
     try {
-      const newMode = !maintenanceMode;
+      const newMode = !maintenanceMode
       await fetch('/api/admin/maintenance', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ maintenance: newMode }),
-      });
-      setMaintenanceMode(newMode);
-      toast.success(`Maintenance mode ${newMode ? 'enabled' : 'disabled'}`);
+      })
+      setMaintenanceMode(newMode)
+      toast.success(`Maintenance mode ${newMode ? 'enabled' : 'disabled'}`)
     } catch (error) {
-      console.error(error);
-      toast.error('Failed to update maintenance mode');
+      console.error(error)
+      toast.error('Failed to update maintenance mode')
     }
-  };
+  }
 
   const fetchOrders = async () => {
     setLoading(true)
     try {
-      const data = await client.fetch(`*[_type == "order"] | order(_createdAt desc)`)
+      const data = await client.fetch<Order[]>(`*[_type == "order"] | order(_createdAt desc)`)
       setOrders(data)
       
       // Calculate summary
-      const revenue = data.reduce((sum: number, order: any) => sum + order.total, 0)
-      const shippingCost = data.reduce((sum: number, order: any) => sum + (order.shippingCost || 375), 0)
+      const revenue = data.reduce((sum: number, order: Order) => sum + order.total, 0)
+      const shippingCost = data.reduce((sum: number, order: Order) => sum + (order.shippingCost || 375), 0)
       const revenueWithoutShipping = revenue - shippingCost
       
       // Group orders by customer email
       const customerMap = new Map<string, {count: number, total: number}>()
-      data.forEach((order: any) => {
+      data.forEach((order: Order) => {
         const email = order.customer.email
         if (customerMap.has(email)) {
           const customer = customerMap.get(email)!
@@ -156,11 +217,11 @@ export default function AdminOrdersDashboard() {
       const trends = calculateOrderTrends(data, timeRange)
       
       const statusCounts = {
-        pending: data.filter((order: any) => order.status === 'pending').length,
-        processing: data.filter((order: any) => order.status === 'processing').length,
-        shipped: data.filter((order: any) => order.status === 'shipped').length,
-        delivered: data.filter((order: any) => order.status === 'delivered').length,
-        cancelled: data.filter((order: any) => order.status === 'cancelled').length,
+        pending: data.filter((order: Order) => order.status === 'pending').length,
+        processing: data.filter((order: Order) => order.status === 'processing').length,
+        shipped: data.filter((order: Order) => order.status === 'shipped').length,
+        delivered: data.filter((order: Order) => order.status === 'delivered').length,
+        cancelled: data.filter((order: Order) => order.status === 'cancelled').length,
       }
       
       setSummary({
@@ -177,7 +238,7 @@ export default function AdminOrdersDashboard() {
     }
   }
 
-  const calculateOrderTrends = (orders: any[], range: TimeRange) => {
+  const calculateOrderTrends = (orders: Order[], range: TimeRange): OrderTrends => {
     const now = new Date()
     let labels: string[] = []
     let orderCounts: number[] = []
@@ -289,7 +350,7 @@ export default function AdminOrdersDashboard() {
     }
   }
 
-  const updateOrderStatus = async (orderId: string, newStatus: string) => {
+  const updateOrderStatus = async (orderId: string, newStatus: OrderStatus) => {
     setUpdatingOrderId(orderId)
     try {
       await client.patch(orderId).set({ status: newStatus }).commit()
@@ -590,9 +651,9 @@ export default function AdminOrdersDashboard() {
               </Card>
             ) : (
               orders.map(order => {
-                const itemCount = order.items?.reduce((t: number, item: any) => t + item.quantity, 0)
-                const statusColor = STATUS_COLORS[order.status as keyof typeof STATUS_COLORS]
-                const statusLabel = STATUS_LABELS[order.status as keyof typeof STATUS_LABELS]
+                const itemCount = order.items?.reduce((t: number, item: OrderItem) => t + item.quantity, 0)
+                const statusColor = STATUS_COLORS[order.status]
+                const statusLabel = STATUS_LABELS[order.status]
 
                 return (
                   <Card key={order._id} className="overflow-hidden bg-gray-900 border-gray-800">
@@ -600,7 +661,7 @@ export default function AdminOrdersDashboard() {
                       <div className="flex justify-between items-start">
                         <div className="flex items-center gap-3">
                           <div className={`p-2 rounded-full ${statusColor}`}>
-                            {STATUS_ICONS[order.status as keyof typeof STATUS_ICONS]}
+                            {STATUS_ICONS[order.status]}
                           </div>
                           <div>
                             <CardTitle className="text-lg text-white">
@@ -725,7 +786,7 @@ export default function AdminOrdersDashboard() {
                               <div className="flex items-center gap-2">
                                 <Select
                                   value={order.status}
-                                  onValueChange={(value) => updateOrderStatus(order._id, value)}
+                                  onValueChange={(value: OrderStatus) => updateOrderStatus(order._id, value)}
                                   disabled={updatingOrderId === order._id}
                                 >
                                   <SelectTrigger className="w-[180px] bg-gray-800 border-gray-700 text-white">
@@ -739,8 +800,8 @@ export default function AdminOrdersDashboard() {
                                         className="hover:bg-gray-800 focus:bg-gray-800"
                                       >
                                         <div className="flex items-center gap-2">
-                                          <span className={`h-2 w-2 rounded-full ${STATUS_COLORS[status as keyof typeof STATUS_COLORS]}`} />
-                                          {STATUS_LABELS[status as keyof typeof STATUS_LABELS]}
+                                          <span className={`h-2 w-2 rounded-full ${STATUS_COLORS[status]}`} />
+                                          {STATUS_LABELS[status]}
                                         </div>
                                       </SelectItem>
                                     ))}
@@ -756,7 +817,7 @@ export default function AdminOrdersDashboard() {
                                 Order Items ({itemCount})
                               </h3>
                               <div className="space-y-3">
-                                {order.items?.map((item: any) => (
+                                {order.items?.map((item: OrderItem) => (
                                   <div 
                                     key={`${item.productId}-${item.color}-${item.size}`} 
                                     className="p-3 bg-gray-800 rounded-md text-sm text-gray-300"
