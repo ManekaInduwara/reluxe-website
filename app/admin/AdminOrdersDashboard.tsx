@@ -31,13 +31,15 @@ import {
   Legend,
   PointElement,
   LineElement,
+  BarController,
+  LineController
 } from 'chart.js'
 import type { ChartData, ChartOptions } from 'chart.js'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { MaintenanceToggle } from './Maintance'
 import ProductQuantities from './QuantityProducts'
 
-// Register ChartJS components
+// Register all necessary ChartJS components
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -46,7 +48,9 @@ ChartJS.register(
   Tooltip,
   Legend,
   PointElement,
-  LineElement
+  LineElement,
+  BarController,
+  LineController
 )
 
 type OrderStatus = 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled'
@@ -166,6 +170,32 @@ export default function AdminOrdersDashboard() {
     }
   })
 
+  // Fix for Clerk.js loading issue
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const script = document.createElement('script')
+      script.src = 'https://cdn.jsdelivr.net/npm/@clerk/clerk-js@5/dist/clerk.browser.js'
+      script.async = true
+      script.onload = () => {
+        if (window.Clerk) {
+          window.Clerk.load({
+            publishableKey: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+          }).catch(error => {
+            console.error('Failed to load Clerk:', error)
+          })
+        }
+      }
+      script.onerror = () => {
+        console.error('Failed to load Clerk script')
+      }
+      document.body.appendChild(script)
+      
+      return () => {
+        document.body.removeChild(script)
+      }
+    }
+  }, [])
+
   const toggleMaintenanceMode = async () => {
     try {
       const newMode = !maintenanceMode
@@ -234,6 +264,9 @@ export default function AdminOrdersDashboard() {
         loyalCustomers,
         orderTrends: trends
       })
+    } catch (error) {
+      console.error('Failed to fetch orders:', error)
+      toast.error('Failed to load orders')
     } finally {
       setLoading(false)
     }
@@ -358,6 +391,7 @@ export default function AdminOrdersDashboard() {
       await fetchOrders()
       toast.success('Order status updated')
     } catch (error) {
+      console.error('Failed to update order status:', error)
       toast.error('Failed to update order status')
     } finally {
       setUpdatingOrderId(null)
