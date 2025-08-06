@@ -132,7 +132,7 @@ export default function CartDisplay() {
                 <ShoppingCart className="h-12 w-12 text-gray-400" />
                 <p className="text-gray-300">Your cart is empty</p>
                 <Button asChild className="mt-4 bg-red-700 hover:bg-red-800 flex items-center gap-2">
-                  <Link href="/products">
+                  <Link href="/category/all">
                     <Package className="h-4 w-4" />
                     Continue Shopping
                   </Link>
