@@ -142,9 +142,6 @@ alt={''} />
           }}
         />
           </div>
-          <p className="text-sm text-gray-400 mt-4">
-        Launching on {new Date(TARGET_DATE).toLocaleDateString()}
-          </p>
         </div>
       </div>
     </div>
