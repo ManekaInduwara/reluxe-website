@@ -71,7 +71,7 @@ export default function CheckoutPage() {
       return true
     } catch (error) {
       toast.error('Stock issue', {
-        description: error.message
+        description: error instanceof Error ? error.message : 'Unknown stock error'
       })
       return false
     }
@@ -105,7 +105,9 @@ export default function CheckoutPage() {
       return true
     } catch (error) {
       console.error('Stock reduction failed:', error)
-      toast.error('Failed to update inventory')
+      toast.error('Failed to update inventory', {
+        description: error instanceof Error ? error.message : 'Unknown inventory error'
+      })
       return false
     }
   }
@@ -154,7 +156,7 @@ export default function CheckoutPage() {
 
     } catch (error) {
       toast.error('Checkout failed', {
-        description: error.message
+        description: error instanceof Error ? error.message : 'An unknown error occurred'
       })
     } finally {
       setLoading(false)
@@ -171,7 +173,6 @@ export default function CheckoutPage() {
       ) : (
         <div className="grid md:grid-cols-2 gap-8">
           <CheckoutForm
-            ref={formRef}
             cartItems={cartItems}
             subtotal={subtotal}
             shippingCost={shippingCost}
