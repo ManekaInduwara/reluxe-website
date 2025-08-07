@@ -16,8 +16,6 @@ import { BankSlipUpload } from './BankSlipUpload';
 import { useCart } from '@/app/Context/CartContext';
 import { reduceStock } from '../utils/stock';
 
-
-
 const formSchema = z.object({
   firstName: z.string().min(2, { message: 'First name must be at least 2 characters' }),
   lastName: z.string().min(2, { message: 'Last name must be at least 2 characters' }),
@@ -34,18 +32,6 @@ export interface CartItem {
   title: string;
   price: number;
   quantity: number;
-  color?: string;      // Sanity color _key
-  colorName?: string;  // Display name
-  size?: string;
-  image: string;
-  sku?: string;
-}
-
-export interface SanityOrderItem {
-  productId: string;
-  title: string;
-  price: number;
-  quantity: number;
   color?: string;
   colorName?: string;
   size?: string;
@@ -54,6 +40,12 @@ export interface SanityOrderItem {
 }
 
 type FormValues = z.infer<typeof formSchema>;
+
+type FieldMessages = Record<string, {
+  title: string;
+  desc: string;
+  icon: React.ReactNode;
+}>;
 
 export function CheckoutForm({ cartItems, subtotal, shippingCost, total }: {
   cartItems: CartItem[];
@@ -83,32 +75,25 @@ export function CheckoutForm({ cartItems, subtotal, shippingCost, total }: {
 
   const paymentMethod = form.watch('paymentMethod');
 
-  type FieldMessages = {
-  [key: string]: {
-    title: string;
-    desc: string;
-    icon: React.ReactNode;
-  };
-};
-
   const handleFieldFocus = (fieldName: keyof FormValues) => {
-  const messages: FieldMessages = {
-    firstName: { title: 'First Name', desc: 'Please enter your legal first name', icon: <User className="w-4 h-4" /> },
-    lastName: { title: 'Last Name', desc: 'Please enter your legal last name', icon: <User className="w-4 h-4" /> },
-    email: { title: 'Email', desc: "We'll send your order confirmation here", icon: <Mail className="w-4 h-4" /> },
-    phone: { title: 'Phone', desc: 'For delivery updates and order tracking', icon: <Phone className="w-4 h-4" /> },
-    address: { title: 'Address', desc: 'Include building number and street name', icon: <Home className="w-4 h-4" /> },
-    city: { title: 'City', desc: 'Your delivery location city', icon: <MapPin className="w-4 h-4" /> },
+    const messages: FieldMessages = {
+      firstName: { title: 'First Name', desc: 'Please enter your legal first name', icon: <User className="w-4 h-4" /> },
+      lastName: { title: 'Last Name', desc: 'Please enter your legal last name', icon: <User className="w-4 h-4" /> },
+      email: { title: 'Email', desc: "We'll send your order confirmation here", icon: <Mail className="w-4 h-4" /> },
+      phone: { title: 'Phone', desc: 'For delivery updates and order tracking', icon: <Phone className="w-4 h-4" /> },
+      address: { title: 'Address', desc: 'Include building number and street name', icon: <Home className="w-4 h-4" /> },
+      city: { title: 'City', desc: 'Your delivery location city', icon: <MapPin className="w-4 h-4" /> },
+    };
+
+    const message = messages[fieldName as string];
+    if (message) {
+      toast.info(message.title, {
+        description: message.desc,
+        icon: message.icon
+      });
+    }
   };
 
-  const message = messages[fieldName];
-  if (message) {
-    toast.info(message.title, {
-      description: message.desc,
-      icon: message.icon
-    });
-  }
-};
   const handlePaymentMethodChange = (value: string) => {
     const method = value as FormValues['paymentMethod'];
     form.setValue('paymentMethod', method);
@@ -176,7 +161,7 @@ export function CheckoutForm({ cartItems, subtotal, shippingCost, total }: {
           quantity: item.quantity,
           ...(item.color && { 
             color: item.color,
-            colorName: item.colorName || item.color // Fallback to color _key if name not provided
+            colorName: item.colorName || item.color
           }),
           ...(item.size && { size: item.size }),
           image: item.image,
@@ -201,10 +186,7 @@ export function CheckoutForm({ cartItems, subtotal, shippingCost, total }: {
         orderData.bankSlipImage = image;
       }
 
-      // First create order
       const createdOrder = await client.create(orderData);
-      
-      // Then reduce stock
       await reduceStock(cartItems);
 
       toast.success('Order Placed!', { 
@@ -389,5 +371,5 @@ export function CheckoutForm({ cartItems, subtotal, shippingCost, total }: {
         )}
       </Button>
     </form>
-  )
+  );
 }
