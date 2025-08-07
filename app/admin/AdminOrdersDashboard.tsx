@@ -841,16 +841,7 @@ export default function AdminOrdersDashboard() {
                                     <div className="text-gray-400 text-xs mt-1">
                                       {item.color && (
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                          <div 
-                                            style={{
-                                              width: '16px', 
-                                              height: '16px', 
-                                              backgroundColor: `#${item.color}`,
-                                              borderRadius: '2px',
-                                              border: '1px solid #ddd'
-                                            }}
-                                          />
-                                          {item.color}
+                                          {item.colorName}
                                         </div>
                                       )}
                                       {item.size && <span className={item.color ? 'ml-2' : ''}>Size: {item.size}</span>}

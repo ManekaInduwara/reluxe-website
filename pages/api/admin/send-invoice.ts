@@ -7,6 +7,7 @@ import { groq } from 'next-sanity'
 interface OrderItem {
   title: string
   color?: string
+  colorName?: string
   size?: string
   quantity: number
   price: number
@@ -57,6 +58,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         items[]{
           title,
           color,
+          colorName,
           size,
           quantity,
           price,
@@ -126,18 +128,9 @@ async function sendInvoiceEmail(to: string, order: Order) {
   const statusText = order.status ? order.status.charAt(0).toUpperCase() + order.status.slice(1) : 'Processing'
 
   const itemsTable = order.items.map((item, index) => {
-    const colorValue = getColorValue(item.color || '')
     const colorDisplay = item.color ? `
       <div style="display: flex; align-items: center; justify-content: center; gap: 5px;">
-        <div style="
-          display: inline-block;
-          width: 16px;
-          height: 16px;
-          background-color: ${colorValue};
-          border-radius: 50%;
-          border: 1px solid #ddd;
-        "></div>
-        <span style="font-size: 12px;">${item.color}</span>
+        <span style="font-size: 12px;">${item.colorName}</span>
       </div>
     ` : '-'
 
