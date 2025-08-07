@@ -1,40 +1,20 @@
 'use client'
 
-import { useState } from 'react'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import * as z from 'zod'
-import { toast } from 'sonner'
-import { client } from '@/sanity/lib/client'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { Truck, Banknote, Loader2, User, Mail, Phone, Home, MapPin } from 'lucide-react'
-import { Textarea } from '@/components/ui/textarea'
-import { reduceStock } from '../utils/stock'
-import { BankSlipUpload } from './BankSlipUpload'
-import { useCart } from '@/app/Context/CartContext'
-
-interface CartItem {
-  productId: string
-  title: string
-  price: number
-  quantity: number
-  color: string
-  size: string | null
-  image: string | { _id: string; url: string }
-  colorName: string
-  currentQuantity?: number
-  sizeQuantity?: number
-}
-
-interface CheckoutFormProps {
-  cartItems: CartItem[]
-  subtotal: number
-  shippingCost: number
-  total: number
-}
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { toast } from 'sonner';
+import { client } from '@/sanity/lib/client';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Truck, Banknote, Loader2, User, Mail, Phone, Home, MapPin } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
+import { BankSlipUpload } from './BankSlipUpload';
+import { useCart } from '@/app/Context/CartContext';
+import { reduceStock } from '../utils/stock';
 
 const formSchema = z.object({
   firstName: z.string().min(2, { message: 'First name must be at least 2 characters' }),
@@ -45,16 +25,45 @@ const formSchema = z.object({
   city: z.string().min(2, { message: 'City must be at least 2 characters' }),
   paymentMethod: z.enum(['cod', 'bank']),
   bankSlipNumber: z.string().optional(),
-})
+});
 
-type FormValues = z.infer<typeof formSchema>
+export interface CartItem {
+  productId: string;
+  title: string;
+  price: number;
+  quantity: number;
+  color?: string;      // Sanity color _key
+  colorName?: string;  // Display name
+  size?: string;
+  image: string;
+  sku?: string;
+}
 
-export function CheckoutForm({ cartItems, subtotal, shippingCost, total }: CheckoutFormProps) {
-  const [bankSlipFile, setBankSlipFile] = useState<File | null>(null)
-  const [isUploading, setIsUploading] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [uploadProgress, setUploadProgress] = useState(0)
-  const { clearCart } = useCart()
+export interface SanityOrderItem {
+  productId: string;
+  title: string;
+  price: number;
+  quantity: number;
+  color?: string;
+  colorName?: string;
+  size?: string;
+  image: string;
+  sku?: string;
+}
+
+type FormValues = z.infer<typeof formSchema>;
+
+export function CheckoutForm({ cartItems, subtotal, shippingCost, total }: {
+  cartItems: CartItem[];
+  subtotal: number;
+  shippingCost: number;
+  total: number;
+}) {
+  const [bankSlipFile, setBankSlipFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const { clearCart } = useCart();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -68,95 +77,79 @@ export function CheckoutForm({ cartItems, subtotal, shippingCost, total }: Check
       paymentMethod: 'cod',
       bankSlipNumber: '',
     },
-  })
+  });
 
-  const paymentMethod = form.watch('paymentMethod')
+  const paymentMethod = form.watch('paymentMethod');
 
   const handleFieldFocus = (fieldName: string) => {
-    switch (fieldName) {
-      case 'firstName':
-        toast.info('First Name', { description: 'Please enter your legal first name', icon: <User className="w-4 h-4" /> })
-        break
-      case 'lastName':
-        toast.info('Last Name', { description: 'Please enter your legal last name', icon: <User className="w-4 h-4" /> })
-        break
-      case 'email':
-        toast.info('Email', { description: "We'll send your order confirmation here", icon: <Mail className="w-4 h-4" /> })
-        break
-      case 'phone':
-        toast.info('Phone', { description: 'For delivery updates and order tracking', icon: <Phone className="w-4 h-4" /> })
-        break
-      case 'address':
-        toast.info('Address', { description: 'Include building number and street name', icon: <Home className="w-4 h-4" /> })
-        break
-      case 'city':
-        toast.info('City', { description: 'Your delivery location city', icon: <MapPin className="w-4 h-4" /> })
-        break
-    }
-  }
+    const messages = {
+      firstName: { title: 'First Name', desc: 'Please enter your legal first name', icon: <User className="w-4 h-4" /> },
+      lastName: { title: 'Last Name', desc: 'Please enter your legal last name', icon: <User className="w-4 h-4" /> },
+      email: { title: 'Email', desc: "We'll send your order confirmation here", icon: <Mail className="w-4 h-4" /> },
+      phone: { title: 'Phone', desc: 'For delivery updates and order tracking', icon: <Phone className="w-4 h-4" /> },
+      address: { title: 'Address', desc: 'Include building number and street name', icon: <Home className="w-4 h-4" /> },
+      city: { title: 'City', desc: 'Your delivery location city', icon: <MapPin className="w-4 h-4" /> },
+    };
+    toast.info(messages[fieldName].title, { 
+      description: messages[fieldName].desc, 
+      icon: messages[fieldName].icon 
+    });
+  };
 
   const handlePaymentMethodChange = (value: string) => {
-    const method = value as FormValues['paymentMethod']
-    form.setValue('paymentMethod', method)
-
-    switch (method) {
-      case 'cod':
-        toast('Cash on Delivery', {
-          description: 'Pay when your order arrives at your doorstep',
-          icon: <Truck className="w-5 h-5" />,
-        })
-        break
-      case 'bank':
-        toast('Bank Transfer', {
-          description: 'Upload your deposit slip after payment',
-          icon: <Banknote className="w-5 h-5" />,
-        })
-        break
-    }
-  }
+    const method = value as FormValues['paymentMethod'];
+    form.setValue('paymentMethod', method);
+    toast(method === 'cod' ? 'Cash on Delivery' : 'Bank Transfer', {
+      description: method === 'cod' 
+        ? 'Pay when your order arrives at your doorstep' 
+        : 'Upload your deposit slip after payment',
+      icon: method === 'cod' ? <Truck className="w-5 h-5" /> : <Banknote className="w-5 h-5" />,
+    });
+  };
 
   const uploadImageToSanity = async (file: File) => {
-    setIsUploading(true)
-    setUploadProgress(0)
+    setIsUploading(true);
+    setUploadProgress(0);
     try {
       const asset = await client.assets.upload('image', file, {
         filename: file.name,
         contentType: file.type,
-      })
-      // Progress updates are not supported in the current Sanity client version
-      setUploadProgress(100)
+        onProgress: (event) => {
+          setUploadProgress(Math.round((event.loaded / event.total) * 100));
+        },
+      });
       return {
         _type: 'image',
         asset: { _type: 'reference', _ref: asset._id },
-      }
+      };
     } finally {
-      setIsUploading(false)
-      setUploadProgress(0)
+      setIsUploading(false);
+      setUploadProgress(0);
     }
-  }
+  };
 
   const onSubmit = async (values: FormValues) => {
     if (!cartItems.length) {
-      toast.error('Empty Cart', { description: 'Your cart is empty. Please add items to checkout' })
-      return
+      toast.error('Empty Cart', { description: 'Your cart is empty. Please add items to checkout' });
+      return;
     }
 
     if (values.paymentMethod === 'bank') {
       if (!bankSlipFile) {
-        toast.error('Bank Slip Required', { description: 'Please upload your bank deposit slip' })
-        return
+        toast.error('Bank Slip Required', { description: 'Please upload your bank deposit slip' });
+        return;
       }
       if (!values.bankSlipNumber) {
-        toast.error('Slip Number Required', { description: 'Please enter your bank slip reference number' })
-        return
+        toast.error('Slip Number Required', { description: 'Please enter your bank slip reference number' });
+        return;
       }
     }
 
-    const toastId = toast.loading('Processing your order...')
-    setIsSubmitting(true)
+    const toastId = toast.loading('Processing your order...');
+    setIsSubmitting(true);
 
     try {
-      const orderData: any = {
+      const orderData = {
         _type: 'order',
         status: 'pending',
         paymentMethod: values.paymentMethod,
@@ -168,9 +161,13 @@ export function CheckoutForm({ cartItems, subtotal, shippingCost, total }: Check
           title: item.title,
           price: item.price,
           quantity: item.quantity,
-          ...(item.color && { color: item.color }),
+          ...(item.color && { 
+            color: item.color,
+            colorName: item.colorName || item.color // Fallback to color _key if name not provided
+          }),
           ...(item.size && { size: item.size }),
           image: item.image,
+          ...(item.sku && { sku: item.sku }),
         })),
         customer: {
           firstName: values.firstName,
@@ -180,26 +177,39 @@ export function CheckoutForm({ cartItems, subtotal, shippingCost, total }: Check
           address: values.address,
           city: values.city,
         },
+        createdAt: new Date().toISOString(),
+        ...(values.paymentMethod === 'bank' && {
+          bankSlipNumber: values.bankSlipNumber,
+        }),
+      };
+
+      if (values.paymentMethod === 'bank' && bankSlipFile) {
+        const image = await uploadImageToSanity(bankSlipFile);
+        orderData.bankSlipImage = image;
       }
 
-      if (values.paymentMethod === 'bank') {
-        const image = await uploadImageToSanity(bankSlipFile!)
-        orderData.bankSlipImage = image
-        orderData.bankSlipNumber = values.bankSlipNumber
-      }
+      // First create order
+      const createdOrder = await client.create(orderData);
+      
+      // Then reduce stock
+      await reduceStock(cartItems);
 
-      const createdOrder = await client.create(orderData)
-      await reduceStock(cartItems)
-
-      toast.success('Order Placed!', { id: toastId, description: 'Your order has been confirmed' })
-      clearCart()
-      window.location.href = `/order-confirmation/${createdOrder._id}`
+      toast.success('Order Placed!', { 
+        id: toastId, 
+        description: 'Your order has been confirmed' 
+      });
+      
+      clearCart();
+      window.location.href = `/order-confirmation/${createdOrder._id}`;
     } catch (error) {
-      console.error('Checkout error:', error)
-      toast.error('Order Failed', { id: toastId, description: 'Something went wrong. Please try again' })
-      setIsSubmitting(false)
+      console.error('Checkout error:', error);
+      toast.error('Order Failed', { 
+        id: toastId, 
+        description: 'Something went wrong. Please try again' 
+      });
+      setIsSubmitting(false);
     }
-  }
+  };
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 bg-black p-6 rounded-lg max-w-xl mx-auto text-white">
