@@ -75,21 +75,16 @@ export default function RootLayout({
         {clerkPublishableKey ? (
           <ClerkProvider
             publishableKey={clerkPublishableKey}
-          appearance={{
-        elements: {
-          card: "bg-black text-white border border-white",
-          headerTitle: "text-white",
-          headerSubtitle: "text-white",
-          formFieldLabel: "text-white",
-          formFieldInput:
-            "bg-black text-white border border-white placeholder-white focus:ring-white focus:border-white",
-          formButtonPrimary: "bg-white text-black hover:bg-gray-300",
-          footerActionText: "text-white",
-          footerActionLink: "text-white underline hover:text-gray-300",
-          socialButtonsBlockButton: "bg-white text-black hover:bg-gray-200",
-          dividerText: "text-white",
-        },
-      }}
+            appearance={{
+              baseTheme: undefined,
+              variables: {
+                colorPrimary: '#b91c1c',
+                colorBackground: '#0a0a0a',
+                colorText: '#ffffff',
+                colorTextSecondary: '#9ca3af',
+                colorInputBackground: '#1f2937',
+                colorInputText: '#ffffff',
+              },
             }}
           >
              <GsapScroll>
