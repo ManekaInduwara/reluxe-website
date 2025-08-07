@@ -164,7 +164,58 @@ export async function reduceStock(cartItems: CartItem[]): Promise<void> {
   }
 }
 
+
 function getColorHex(colorName: string): string {
   const normalized = colorName.toLowerCase().trim();
   return COLOR_HEX_MAP[normalized] || '#000000';
 }
+
+export const checkStockAvailability = async (cartItems: CartItem[]): Promise<{ valid: boolean; outOfStockItems: string[] }> => {
+  const outOfStockItems: string[] = [];
+
+  for (const item of cartItems) {
+    try {
+      const product = await client.fetch(
+        `*[_id == $id][0]{
+          availableQuantity,
+          "colorVariant": colors[_key == $color][0] {
+            quantity,
+            "sizeVariant": sizes[size == $size][0] {
+              quantity
+            }
+          }
+        }`,
+        { id: item.productId, color: item.color, size: item.size }
+      );
+
+      // Check product-level availability
+      if (product.availableQuantity < item.quantity) {
+        outOfStockItems.push(item.title);
+        continue;
+      }
+
+      // Check color-level availability if exists
+      if (product.colorVariant?.quantity !== undefined && 
+          product.colorVariant.quantity < item.quantity) {
+        outOfStockItems.push(item.title);
+        continue;
+      }
+
+      // Check size-level availability if exists
+      if (item.size && 
+          product.colorVariant?.sizeVariant?.quantity !== undefined && 
+          product.colorVariant.sizeVariant.quantity < item.quantity) {
+        outOfStockItems.push(item.title);
+      }
+
+    } catch (error) {
+      console.error(`Failed to check stock for product ${item.productId}:`, error);
+      outOfStockItems.push(item.title);
+    }
+  }
+
+  return {
+    valid: outOfStockItems.length === 0,
+    outOfStockItems
+  };
+};
