@@ -62,6 +62,7 @@ interface OrderItem {
   price: number
   quantity: number
   color?: string
+  colorName?:string
   size?: string
 }
 
