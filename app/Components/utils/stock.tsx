@@ -1,77 +1,170 @@
+// reduceStock.ts
 import { client } from '@/sanity/lib/client';
 
-interface CartItem {
+
+// types.ts
+export interface CartItem {
   productId: string;
   title: string;
   price: number;
   quantity: number;
-  color: string; // This should be the color _key
-  colorName: string; // Add this if you need the display name
-  size: string | null;
-  image: string | { _id: string; url: string };
-  currentQuantity?: number;
-  sizeQuantity?: number;
+  color?: string; // Sanity color _key
+  colorName?: string; // Display name
+  size?: string;
+  image: string;
+  sku?: string;
 }
 
-export const reduceStock = async (cartItems: CartItem[]) => {
-  for (const item of cartItems) {
-    const product = await client.fetch(`*[_id == $id][0]`, {
-      id: item.productId,
-    });
+export interface ProductColor {
+  _key: string;
+  color: {
+    _type: 'color';
+    hex: string;
+    name?: string;
+    alpha?: number;
+  };
+  quantity: number;
+  sizes?: {
+    size: string;
+    quantity: number;
+  }[];
+}
 
-    if (!product?.colors) continue; // Safety check
+export interface SanityProduct {
+  _id: string;
+  availableQuantity: number;
+  colors: ProductColor[];
+  sku?: string;
+}
 
-    // Reduce availableQuantity at the product level
-    let newAvailableQuantity = (product.availableQuantity || 0) - item.quantity;
-    if (newAvailableQuantity < 0) newAvailableQuantity = 0;
-
-    const updatedColors = product.colors.map((colorItem: any) => {
-      // Match by _key (assuming item.color is the _key)
-      if (colorItem._key !== item.color) {
-        return colorItem; // Keep untouched
-      }
-
-      const updatedColor = { ...colorItem };
-
-      // Update color name if provided and different
-      if (item.colorName && updatedColor.color !== item.colorName) {
-        updatedColor.color = item.colorName;
-      }
-
-      // Reduce color-level quantity
-      if (typeof updatedColor.quantity === 'number') {
-        updatedColor.quantity = Math.max(
-          updatedColor.quantity - item.quantity,
-          0
-        );
-      }
-
-      // Reduce size-level quantity if applicable
-      if (item.size && Array.isArray(updatedColor.sizes)) {
-        updatedColor.sizes = updatedColor.sizes.map((sizeItem: any) => {
-          if (sizeItem.size !== item.size) {
-            return sizeItem;
-          }
-          return {
-            ...sizeItem,
-            quantity: Math.max(
-              (sizeItem.quantity || 0) - item.quantity,
-              0
-            ),
-          };
-        });
-      }
-
-      return updatedColor;
-    });
-
-    // Patch updated colors[] and availableQuantity
-    await client
-      .patch(item.productId)
-      .set({
-        colors: updatedColors,
-        availableQuantity: newAvailableQuantity,
-      })
-      .commit();
-  }
+const COLOR_HEX_MAP: Record<string, string> = {
+  white: '#FFFFFF',
+  black: '#000000',
+  red: '#FF0000',
+  blue: '#0000FF',
+  green: '#008000',
+  yellow: '#FFFF00',
+  orange: '#FFA500',
+  purple: '#800080',
+  pink: '#FFC0CB',
+  brown: '#A52A2A',
+  gray: '#808080',
+  silver: '#C0C0C0',
+  gold: '#FFD700',
+  // Add more colors as needed
 };
+
+export async function reduceStock(cartItems: CartItem[]): Promise<void> {
+  const transaction = client.transaction();
+  const now = new Date().toISOString();
+  const errors: string[] = [];
+
+  try {
+    // First verify all products have sufficient stock
+    for (const item of cartItems) {
+      const product = await client.fetch<SanityProduct>(
+        `*[_id == $id][0]{
+          _id,
+          availableQuantity,
+          colors[]{
+            _key,
+            color,
+            quantity,
+            sizes[]{
+              size,
+              quantity
+            }
+          },
+          sku
+        }`,
+        { id: item.productId }
+      );
+
+      if (!product) {
+        throw new Error(`Product ${item.productId} not found`);
+      }
+
+      // Check overall available quantity
+      if (product.availableQuantity < item.quantity) {
+        throw new Error(`Insufficient stock for ${product.sku || product._id}`);
+      }
+
+      // Check color-specific quantity if color is specified
+      if (item.color) {
+        const colorVariant = product.colors.find(c => c._key === item.color);
+        if (!colorVariant) {
+          throw new Error(`Color variant ${item.color} not found for product ${product._id}`);
+        }
+
+        if (colorVariant.quantity < item.quantity) {
+          throw new Error(`Insufficient stock for color ${item.colorName || item.color} in ${product.sku || product._id}`);
+        }
+
+        // Check size-specific quantity if size is specified
+        if (item.size && colorVariant.sizes) {
+          const sizeVariant = colorVariant.sizes.find(s => s.size === item.size);
+          if (!sizeVariant) {
+            throw new Error(`Size ${item.size} not available for color ${item.color}`);
+          }
+
+          if (sizeVariant.quantity < item.quantity) {
+            throw new Error(`Insufficient stock for size ${item.size} in color ${item.color}`);
+          }
+        }
+      }
+    }
+
+    // All checks passed - proceed with stock reduction
+    for (const item of cartItems) {
+      const patch = client
+        .patch(item.productId)
+        .setIfMissing({ lastStockUpdate: now });
+
+      // Reduce overall available quantity
+      patch.dec({ availableQuantity: item.quantity });
+
+      // Reduce color variant quantity if specified
+      if (item.color) {
+        const colorIdx = `colors[_key=="${item.color}"]`;
+        
+        // Reduce color-level quantity
+        patch.dec({
+          [`${colorIdx}.quantity`]: item.quantity
+        });
+
+        // Update color name if provided
+        if (item.colorName) {
+          patch.set({
+            [`${colorIdx}.color`]: {
+              _type: 'color',
+              hex: getColorHex(item.colorName),
+              name: item.colorName,
+              alpha: 1
+            }
+          });
+        }
+
+        // Reduce size quantity if specified
+        if (item.size) {
+          const sizeIdx = `colors[_key=="${item.size}"]`;
+          patch.dec({
+            [`${colorIdx}.sizes[size=="${item.size}"].quantity`]: item.quantity
+          });
+        }
+      }
+
+      transaction.patch(patch);
+    }
+
+    await transaction.commit();
+
+  } catch (error) {
+    console.error('Stock reduction failed:', error);
+    throw error; // Re-throw for the calling function to handle
+  }
+}
+
+function getColorHex(colorName: string): string {
+  const normalized = colorName.toLowerCase().trim();
+  return COLOR_HEX_MAP[normalized] || '#000000';
+}
