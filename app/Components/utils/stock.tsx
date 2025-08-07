@@ -1,41 +1,6 @@
 // reduceStock.ts
 import { client } from '@/sanity/lib/client';
-
-
-// types.ts
-export interface CartItem {
-  productId: string;
-  title: string;
-  price: number;
-  quantity: number;
-  color?: string; // Sanity color _key
-  colorName?: string; // Display name
-  size?: string;
-  image: string;
-  sku?: string;
-}
-
-export interface ProductColor {
-  _key: string;
-  color: {
-    _type: 'color';
-    hex: string;
-    name?: string;
-    alpha?: number;
-  };
-  quantity: number;
-  sizes?: {
-    size: string;
-    quantity: number;
-  }[];
-}
-
-export interface SanityProduct {
-  _id: string;
-  availableQuantity: number;
-  colors: ProductColor[];
-  sku?: string;
-}
+import { CartItem, SanityProduct , ProductColor } from '../interface';
 
 const COLOR_HEX_MAP: Record<string, string> = {
   white: '#FFFFFF',

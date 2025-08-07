@@ -15,19 +15,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { reduceStock, checkStockAvailability } from '../utils/stock'
 import { BankSlipUpload } from './BankSlipUpload'
 import { useCart } from '@/app/Context/CartContext'
-
-interface CartItem {
-  productId: string
-  title: string
-  price: number
-  quantity: number
-  color: string
-  colorName: string
-  size: string | null
-  image: string | { _id: string; url: string }
-  currentQuantity?: number
-  sizeQuantity?: number
-}
+import { CartItem } from '../interface'
 
 interface CheckoutFormProps {
   cartItems: CartItem[]
