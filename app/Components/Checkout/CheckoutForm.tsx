@@ -16,6 +16,8 @@ import { BankSlipUpload } from './BankSlipUpload';
 import { useCart } from '@/app/Context/CartContext';
 import { reduceStock } from '../utils/stock';
 
+
+
 const formSchema = z.object({
   firstName: z.string().min(2, { message: 'First name must be at least 2 characters' }),
   lastName: z.string().min(2, { message: 'Last name must be at least 2 characters' }),
@@ -81,21 +83,32 @@ export function CheckoutForm({ cartItems, subtotal, shippingCost, total }: {
 
   const paymentMethod = form.watch('paymentMethod');
 
-  const handleFieldFocus = (fieldName: string) => {
-    const messages = {
-      firstName: { title: 'First Name', desc: 'Please enter your legal first name', icon: <User className="w-4 h-4" /> },
-      lastName: { title: 'Last Name', desc: 'Please enter your legal last name', icon: <User className="w-4 h-4" /> },
-      email: { title: 'Email', desc: "We'll send your order confirmation here", icon: <Mail className="w-4 h-4" /> },
-      phone: { title: 'Phone', desc: 'For delivery updates and order tracking', icon: <Phone className="w-4 h-4" /> },
-      address: { title: 'Address', desc: 'Include building number and street name', icon: <Home className="w-4 h-4" /> },
-      city: { title: 'City', desc: 'Your delivery location city', icon: <MapPin className="w-4 h-4" /> },
-    };
-    toast.info(messages[fieldName].title, { 
-      description: messages[fieldName].desc, 
-      icon: messages[fieldName].icon 
-    });
+  type FieldMessages = {
+  [key: string]: {
+    title: string;
+    desc: string;
+    icon: React.ReactNode;
+  };
+};
+
+  const handleFieldFocus = (fieldName: keyof FormValues) => {
+  const messages: FieldMessages = {
+    firstName: { title: 'First Name', desc: 'Please enter your legal first name', icon: <User className="w-4 h-4" /> },
+    lastName: { title: 'Last Name', desc: 'Please enter your legal last name', icon: <User className="w-4 h-4" /> },
+    email: { title: 'Email', desc: "We'll send your order confirmation here", icon: <Mail className="w-4 h-4" /> },
+    phone: { title: 'Phone', desc: 'For delivery updates and order tracking', icon: <Phone className="w-4 h-4" /> },
+    address: { title: 'Address', desc: 'Include building number and street name', icon: <Home className="w-4 h-4" /> },
+    city: { title: 'City', desc: 'Your delivery location city', icon: <MapPin className="w-4 h-4" /> },
   };
 
+  const message = messages[fieldName];
+  if (message) {
+    toast.info(message.title, {
+      description: message.desc,
+      icon: message.icon
+    });
+  }
+};
   const handlePaymentMethodChange = (value: string) => {
     const method = value as FormValues['paymentMethod'];
     form.setValue('paymentMethod', method);
