@@ -8,6 +8,7 @@ import { CheckoutForm } from '@/app/Components/Checkout/CheckoutForm'
 import { OrderSummary } from '@/app/Components/Checkout/OrderSummary'
 import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
+import { CartItem } from '../Components/interface'
 
 interface CartItemWithStock extends CartItem {
   currentQuantity: number
