@@ -12,22 +12,10 @@ import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Truck, Banknote, Loader2, User, Mail, Phone, Home, MapPin } from 'lucide-react'
 import { Textarea } from '@/components/ui/textarea'
-import { reduceStock } from '../utils/stock'
+import { reduceStock, checkStockAvailability } from '../utils/stock'
 import { BankSlipUpload } from './BankSlipUpload'
 import { useCart } from '@/app/Context/CartContext'
-
-interface CartItem {
-  productId: string
-  title: string
-  price: number
-  quantity: number
-  color: string
-  size: string | null
-  image: string | { _id: string; url: string }
-  colorName: string
-  currentQuantity?: number
-  sizeQuantity?: number
-}
+import { CartItem } from '../interface'
 
 interface CheckoutFormProps {
   cartItems: CartItem[]
@@ -45,6 +33,7 @@ const formSchema = z.object({
   city: z.string().min(2, { message: 'City must be at least 2 characters' }),
   paymentMethod: z.enum(['cod', 'bank']),
   bankSlipNumber: z.string().optional(),
+  notes: z.string().optional(),
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -67,31 +56,27 @@ export function CheckoutForm({ cartItems, subtotal, shippingCost, total }: Check
       city: '',
       paymentMethod: 'cod',
       bankSlipNumber: '',
+      notes: '',
     },
   })
 
   const paymentMethod = form.watch('paymentMethod')
 
   const handleFieldFocus = (fieldName: string) => {
-    switch (fieldName) {
-      case 'firstName':
-        toast.info('First Name', { description: 'Please enter your legal first name', icon: <User className="w-4 h-4" /> })
-        break
-      case 'lastName':
-        toast.info('Last Name', { description: 'Please enter your legal last name', icon: <User className="w-4 h-4" /> })
-        break
-      case 'email':
-        toast.info('Email', { description: "We'll send your order confirmation here", icon: <Mail className="w-4 h-4" /> })
-        break
-      case 'phone':
-        toast.info('Phone', { description: 'For delivery updates and order tracking', icon: <Phone className="w-4 h-4" /> })
-        break
-      case 'address':
-        toast.info('Address', { description: 'Include building number and street name', icon: <Home className="w-4 h-4" /> })
-        break
-      case 'city':
-        toast.info('City', { description: 'Your delivery location city', icon: <MapPin className="w-4 h-4" /> })
-        break
+    const messages = {
+      firstName: { title: 'First Name', description: 'Please enter your legal first name', icon: <User className="w-4 h-4" /> },
+      lastName: { title: 'Last Name', description: 'Please enter your legal last name', icon: <User className="w-4 h-4" /> },
+      email: { title: 'Email', description: "We'll send your order confirmation here", icon: <Mail className="w-4 h-4" /> },
+      phone: { title: 'Phone', description: 'For delivery updates and order tracking', icon: <Phone className="w-4 h-4" /> },
+      address: { title: 'Address', description: 'Include building number and street name', icon: <Home className="w-4 h-4" /> },
+      city: { title: 'City', description: 'Your delivery location city', icon: <MapPin className="w-4 h-4" /> },
+    }
+
+    if (messages[fieldName as keyof typeof messages]) {
+      toast.info(messages[fieldName as keyof typeof messages].title, {
+        description: messages[fieldName as keyof typeof messages].description,
+        icon: messages[fieldName as keyof typeof messages].icon,
+      })
     }
   }
 
@@ -99,20 +84,23 @@ export function CheckoutForm({ cartItems, subtotal, shippingCost, total }: Check
     const method = value as FormValues['paymentMethod']
     form.setValue('paymentMethod', method)
 
-    switch (method) {
-      case 'cod':
-        toast('Cash on Delivery', {
-          description: 'Pay when your order arrives at your doorstep',
-          icon: <Truck className="w-5 h-5" />,
-        })
-        break
-      case 'bank':
-        toast('Bank Transfer', {
-          description: 'Upload your deposit slip after payment',
-          icon: <Banknote className="w-5 h-5" />,
-        })
-        break
+    const paymentMethods = {
+      cod: {
+        title: 'Cash on Delivery',
+        description: 'Pay when your order arrives at your doorstep',
+        icon: <Truck className="w-5 h-5" />,
+      },
+      bank: {
+        title: 'Bank Transfer',
+        description: 'Upload your deposit slip after payment',
+        icon: <Banknote className="w-5 h-5" />,
+      },
     }
+
+    toast(paymentMethods[method].title, {
+      description: paymentMethods[method].description,
+      icon: paymentMethods[method].icon,
+    })
   }
 
   const uploadImageToSanity = async (file: File) => {
@@ -123,7 +111,6 @@ export function CheckoutForm({ cartItems, subtotal, shippingCost, total }: Check
         filename: file.name,
         contentType: file.type,
       })
-      // Progress updates are not supported in the current Sanity client version
       setUploadProgress(100)
       return {
         _type: 'image',
@@ -138,6 +125,15 @@ export function CheckoutForm({ cartItems, subtotal, shippingCost, total }: Check
   const onSubmit = async (values: FormValues) => {
     if (!cartItems.length) {
       toast.error('Empty Cart', { description: 'Your cart is empty. Please add items to checkout' })
+      return
+    }
+
+    // Check stock availability before proceeding
+    const { valid, outOfStockItems } = await checkStockAvailability(cartItems)
+    if (!valid) {
+      toast.error('Out of Stock', { 
+        description: `Some items are no longer available: ${outOfStockItems.join(', ')}` 
+      })
       return
     }
 
@@ -156,7 +152,37 @@ export function CheckoutForm({ cartItems, subtotal, shippingCost, total }: Check
     setIsSubmitting(true)
 
     try {
-      const orderData: any = {
+      const orderData: {
+        _type: string
+        status: string
+        paymentMethod: "cod" | "bank"
+        subtotal: number
+        shipping: number
+        total: number
+        items: {
+          _key: string
+          productId: string
+          title: string
+          price: number
+          quantity: number
+          color?: string
+          colorName?: string
+          size?: string | null
+          image: string | { _id: string; url: string }
+        }[]
+        customer: {
+          firstName: string
+          lastName: string
+          email: string
+          phone: string
+          address: string
+          city: string
+        }
+        notes?: string
+        createdAt: string
+        bankSlipImage?: any
+        bankSlipNumber?: string
+      } = {
         _type: 'order',
         status: 'pending',
         paymentMethod: values.paymentMethod,
@@ -164,11 +190,12 @@ export function CheckoutForm({ cartItems, subtotal, shippingCost, total }: Check
         shipping: shippingCost,
         total,
         items: cartItems.map((item) => ({
+          _key: crypto.randomUUID(),
           productId: item.productId,
           title: item.title,
           price: item.price,
           quantity: item.quantity,
-          ...(item.color && { color: item.color }),
+          ...(item.color && { color: item.color, colorName: item.colorName }),
           ...(item.size && { size: item.size }),
           image: item.image,
         })),
@@ -180,6 +207,8 @@ export function CheckoutForm({ cartItems, subtotal, shippingCost, total }: Check
           address: values.address,
           city: values.city,
         },
+        ...(values.notes && { notes: values.notes }),
+        createdAt: new Date().toISOString(),
       }
 
       if (values.paymentMethod === 'bank') {
@@ -189,14 +218,28 @@ export function CheckoutForm({ cartItems, subtotal, shippingCost, total }: Check
       }
 
       const createdOrder = await client.create(orderData)
+      
+      // Reduce stock only after successful order creation
       await reduceStock(cartItems)
 
-      toast.success('Order Placed!', { id: toastId, description: 'Your order has been confirmed' })
+      toast.success('Order Placed!', { 
+        id: toastId, 
+        description: 'Your order has been confirmed',
+        action: {
+          label: 'View Order',
+          onClick: () => window.location.href = `/order-confirmation/${createdOrder._id}`
+        }
+      })
+      
       clearCart()
       window.location.href = `/order-confirmation/${createdOrder._id}`
     } catch (error) {
       console.error('Checkout error:', error)
-      toast.error('Order Failed', { id: toastId, description: 'Something went wrong. Please try again' })
+      toast.error('Order Failed', { 
+        id: toastId, 
+        description: error instanceof Error ? error.message : 'Something went wrong. Please try again'
+      })
+    } finally {
       setIsSubmitting(false)
     }
   }
@@ -300,6 +343,16 @@ export function CheckoutForm({ cartItems, subtotal, shippingCost, total }: Check
             {form.formState.errors.city.message}
           </p>
         )}
+      </div>
+
+      <div>
+        <Label htmlFor="notes">Order Notes (Optional)</Label>
+        <Textarea
+          {...form.register('notes')}
+          placeholder="Special instructions, delivery preferences, etc."
+          className="bg-neutral-900 border-gray-700 focus:ring-red-500"
+          rows={3}
+        />
       </div>
 
       <div className="pt-4">

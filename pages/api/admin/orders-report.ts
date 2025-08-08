@@ -72,7 +72,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     order.items.forEach((item: any) => {
       const itemLine = `- ${item.title} (${item.quantity} × LKR ${item.price.toFixed(2)})`
-      const color = item.color ? `Color: ${item.color}` : ''
+      const color = item.color ? `Color: ${item.colorName}` : ''
       const size = item.size ? `Size: ${item.size}` : ''
       const details = [color, size].filter(Boolean).join(' | ')
 

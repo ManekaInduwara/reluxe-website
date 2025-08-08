@@ -113,3 +113,38 @@ export interface Product {
     _type: "reference";
   };
 }
+
+export interface CartItem {
+  productId: string;
+  title: string;
+  price: number;
+  quantity: number;
+  color?: string; // Sanity color _key
+  colorName?: string; // Display name
+  size?: string | null; // Make this consistent with null allowed
+  image: string | { _id: string; url: string };
+  sku?: string;
+  currentQuantity?: number;
+}
+
+export interface ProductColor {
+  _key: string;
+  color: {
+    _type: 'color';
+    hex: string;
+    name?: string;
+    alpha?: number;
+  };
+  quantity: number;
+  sizes?: {
+    size: string;
+    quantity: number;
+  }[];
+}
+
+export interface SanityProduct {
+  _id: string;
+  availableQuantity: number;
+  colors: ProductColor[];
+  sku?: string;
+}
