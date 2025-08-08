@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { client } from '@/sanity/lib/client'
-import { Loader2, Download, ChevronDown, ChevronUp, Truck, CheckCircle, Clock, XCircle, Mail, Trash2, Package, CreditCard, User, Star, Crown, Award, AlertTriangle } from 'lucide-react'
+import { Loader2, Download, ChevronDown, ChevronUp, Truck, CheckCircle, Clock, XCircle, Mail, Trash2, Package, CreditCard, User, Star, Crown, Award } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Card,
@@ -20,7 +20,7 @@ import {
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
-import { Bar, Line, Chart } from 'react-chartjs-2'
+import { Chart } from 'react-chartjs-2'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -31,12 +31,15 @@ import {
   Legend,
   PointElement,
   LineElement,
+  BarController,
+  LineController
 } from 'chart.js'
+import type { ChartData, ChartOptions } from 'chart.js'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { MaintenanceToggle } from './Maintance'
 import ProductQuantities from './QuantityProducts'
 
-// Register ChartJS components
+// Register all necessary ChartJS components
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -45,10 +48,76 @@ ChartJS.register(
   Tooltip,
   Legend,
   PointElement,
-  LineElement
+  LineElement,
+  BarController,
+  LineController
 )
 
-const STATUS_OPTIONS = ['pending', 'processing', 'shipped', 'delivered', 'cancelled']
+type OrderStatus = 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled'
+type TimeRange = 'day' | 'week' | 'month' | 'year'
+
+interface OrderItem {
+  productId: string
+  title: string
+  price: number
+  quantity: number
+  color?: string
+  colorName?:string
+  size?: string
+}
+
+interface Customer {
+  firstName: string
+  lastName: string
+  email: string
+  phone?: string
+  address: string
+  city: string
+  postalCode?: string
+}
+
+interface Order {
+  _id: string
+  _createdAt: string
+  status: OrderStatus
+  total: number
+  shippingCost?: number
+  paymentMethod: string
+  customer: Customer
+  items: OrderItem[]
+}
+
+interface StatusCounts {
+  pending: number
+  processing: number
+  shipped: number
+  delivered: number
+  cancelled: number
+}
+
+interface LoyalCustomer {
+  email: string
+  orderCount: number
+  totalSpent: number
+}
+
+interface OrderTrends {
+  labels: string[]
+  orderCounts: number[]
+  revenue: number[]
+}
+
+interface Summary {
+  totalOrders: number
+  totalRevenue: number
+  totalRevenueWithoutShipping: number
+  totalShippingCost: number
+  statusCounts: StatusCounts
+  loyalCustomers: LoyalCustomer[]
+  orderTrends: OrderTrends
+}
+
+const STATUS_OPTIONS: OrderStatus[] = ['pending', 'processing', 'shipped', 'delivered', 'cancelled']
 
 const STATUS_ICONS = {
   pending: <Clock className="h-4 w-4 text-yellow-500" />,
@@ -74,17 +143,15 @@ const STATUS_LABELS = {
   cancelled: 'Cancelled',
 }
 
-type TimeRange = 'day' | 'week' | 'month' | 'year'
-
 export default function AdminOrdersDashboard() {
-  const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const [maintenanceMode, setMaintenanceMode] = useState(false)
   const [activeTab, setActiveTab] = useState('orders')
-  const [orders, setOrders] = useState<any[]>([])
+  const [orders, setOrders] = useState<Order[]>([])
   const [loading, setLoading] = useState(false)
   const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null)
   const [expandedOrder, setExpandedOrder] = useState<string | null>(null)
   const [timeRange, setTimeRange] = useState<TimeRange>('month')
-  const [summary, setSummary] = useState({
+  const [summary, setSummary] = useState<Summary>({
     totalOrders: 0,
     totalRevenue: 0,
     totalRevenueWithoutShipping: 0,
@@ -96,44 +163,46 @@ export default function AdminOrdersDashboard() {
       delivered: 0,
       cancelled: 0,
     },
-    loyalCustomers: [] as Array<{email: string, orderCount: number, totalSpent: number}>,
+    loyalCustomers: [],
     orderTrends: {
-      labels: [] as string[],
-      orderCounts: [] as number[],
-      revenue: [] as number[],
+      labels: [],
+      orderCounts: [],
+      revenue: [],
     }
   })
 
+
+
   const toggleMaintenanceMode = async () => {
     try {
-      const newMode = !maintenanceMode;
+      const newMode = !maintenanceMode
       await fetch('/api/admin/maintenance', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ maintenance: newMode }),
-      });
-      setMaintenanceMode(newMode);
-      toast.success(`Maintenance mode ${newMode ? 'enabled' : 'disabled'}`);
+      })
+      setMaintenanceMode(newMode)
+      toast.success(`Maintenance mode ${newMode ? 'enabled' : 'disabled'}`)
     } catch (error) {
-      console.error(error);
-      toast.error('Failed to update maintenance mode');
+      console.error(error)
+      toast.error('Failed to update maintenance mode')
     }
-  };
+  }
 
   const fetchOrders = async () => {
     setLoading(true)
     try {
-      const data = await client.fetch(`*[_type == "order"] | order(_createdAt desc)`)
+      const data = await client.fetch<Order[]>(`*[_type == "order"] | order(_createdAt desc)`)
       setOrders(data)
       
       // Calculate summary
-      const revenue = data.reduce((sum: number, order: any) => sum + order.total, 0)
-      const shippingCost = data.reduce((sum: number, order: any) => sum + (order.shippingCost || 375), 0)
+      const revenue = data.reduce((sum, order) => sum + order.total, 0)
+      const shippingCost = data.reduce((sum, order) => sum + (order.shippingCost || 375), 0)
       const revenueWithoutShipping = revenue - shippingCost
       
       // Group orders by customer email
       const customerMap = new Map<string, {count: number, total: number}>()
-      data.forEach((order: any) => {
+      data.forEach((order) => {
         const email = order.customer.email
         if (customerMap.has(email)) {
           const customer = customerMap.get(email)!
@@ -156,11 +225,11 @@ export default function AdminOrdersDashboard() {
       const trends = calculateOrderTrends(data, timeRange)
       
       const statusCounts = {
-        pending: data.filter((order: any) => order.status === 'pending').length,
-        processing: data.filter((order: any) => order.status === 'processing').length,
-        shipped: data.filter((order: any) => order.status === 'shipped').length,
-        delivered: data.filter((order: any) => order.status === 'delivered').length,
-        cancelled: data.filter((order: any) => order.status === 'cancelled').length,
+        pending: data.filter((order) => order.status === 'pending').length,
+        processing: data.filter((order) => order.status === 'processing').length,
+        shipped: data.filter((order) => order.status === 'shipped').length,
+        delivered: data.filter((order) => order.status === 'delivered').length,
+        cancelled: data.filter((order) => order.status === 'cancelled').length,
       }
       
       setSummary({
@@ -172,12 +241,15 @@ export default function AdminOrdersDashboard() {
         loyalCustomers,
         orderTrends: trends
       })
+    } catch (error) {
+      console.error('Failed to fetch orders:', error)
+      toast.error('Failed to load orders')
     } finally {
       setLoading(false)
     }
   }
 
-  const calculateOrderTrends = (orders: any[], range: TimeRange) => {
+  const calculateOrderTrends = (orders: Order[], range: TimeRange): OrderTrends => {
     const now = new Date()
     let labels: string[] = []
     let orderCounts: number[] = []
@@ -289,13 +361,14 @@ export default function AdminOrdersDashboard() {
     }
   }
 
-  const updateOrderStatus = async (orderId: string, newStatus: string) => {
+  const updateOrderStatus = async (orderId: string, newStatus: OrderStatus) => {
     setUpdatingOrderId(orderId)
     try {
       await client.patch(orderId).set({ status: newStatus }).commit()
       await fetchOrders()
       toast.success('Order status updated')
     } catch (error) {
+      console.error('Failed to update order status:', error)
       toast.error('Failed to update order status')
     } finally {
       setUpdatingOrderId(null)
@@ -328,15 +401,11 @@ export default function AdminOrdersDashboard() {
     }))
   }
 
-  useEffect(() => {
-    fetchOrders()
-  }, [])
-
-  // Chart data configuration
-  const orderTrendsChartData = {
+  const chartData: ChartData<'bar' | 'line'> = {
     labels: summary.orderTrends.labels,
     datasets: [
       {
+        type: 'bar' as const,
         label: 'Order Count',
         data: summary.orderTrends.orderCounts,
         backgroundColor: 'rgba(99, 102, 241, 0.6)',
@@ -345,22 +414,26 @@ export default function AdminOrdersDashboard() {
         yAxisID: 'y',
       },
       {
+        type: 'line' as const,
         label: 'Revenue (LKR)',
         data: summary.orderTrends.revenue,
         backgroundColor: 'rgba(16, 185, 129, 0.6)',
         borderColor: 'rgba(16, 185, 129, 1)',
         borderWidth: 1,
         yAxisID: 'y1',
-        type: 'line' as const,
       }
     ]
   }
 
-  const chartOptions = {
+  const chartOptions: ChartOptions<'bar' | 'line'> = {
     responsive: true,
+    interaction: {
+      mode: 'index',
+      intersect: false,
+    },
     plugins: {
       legend: {
-        position: 'top' as const,
+        position: 'top',
         labels: {
           color: '#e5e7eb',
         }
@@ -381,9 +454,9 @@ export default function AdminOrdersDashboard() {
         }
       },
       y: {
-        type: 'linear' as const,
+        type: 'linear',
         display: true,
-        position: 'left' as const,
+        position: 'left',
         grid: {
           color: 'rgba(55, 65, 81, 0.5)'
         },
@@ -392,9 +465,9 @@ export default function AdminOrdersDashboard() {
         }
       },
       y1: {
-        type: 'linear' as const,
+        type: 'linear',
         display: true,
-        position: 'right' as const,
+        position: 'right',
         grid: {
           drawOnChartArea: false,
           color: 'rgba(55, 65, 81, 0.5)'
@@ -406,6 +479,10 @@ export default function AdminOrdersDashboard() {
     },
     maintainAspectRatio: false,
   }
+
+  useEffect(() => {
+    fetchOrders()
+  }, [])
 
   return (
     <div className="min-h-screen bg-black text-white p-4 md:p-8 font-[family-name:var(--font-poppins)]">
@@ -462,7 +539,7 @@ export default function AdminOrdersDashboard() {
               </div>
             </CardHeader>
             <CardContent className="h-80">
-              <Chart type="bar" data={orderTrendsChartData} options={chartOptions} />
+              <Chart type='bar' data={chartData} options={chartOptions} />
             </CardContent>
           </Card>
 
@@ -590,9 +667,9 @@ export default function AdminOrdersDashboard() {
               </Card>
             ) : (
               orders.map(order => {
-                const itemCount = order.items?.reduce((t: number, item: any) => t + item.quantity, 0)
-                const statusColor = STATUS_COLORS[order.status as keyof typeof STATUS_COLORS]
-                const statusLabel = STATUS_LABELS[order.status as keyof typeof STATUS_LABELS]
+                const itemCount = order.items?.reduce((t, item) => t + item.quantity, 0)
+                const statusColor = STATUS_COLORS[order.status]
+                const statusLabel = STATUS_LABELS[order.status]
 
                 return (
                   <Card key={order._id} className="overflow-hidden bg-gray-900 border-gray-800">
@@ -600,7 +677,7 @@ export default function AdminOrdersDashboard() {
                       <div className="flex justify-between items-start">
                         <div className="flex items-center gap-3">
                           <div className={`p-2 rounded-full ${statusColor}`}>
-                            {STATUS_ICONS[order.status as keyof typeof STATUS_ICONS]}
+                            {STATUS_ICONS[order.status]}
                           </div>
                           <div>
                             <CardTitle className="text-lg text-white">
@@ -725,7 +802,7 @@ export default function AdminOrdersDashboard() {
                               <div className="flex items-center gap-2">
                                 <Select
                                   value={order.status}
-                                  onValueChange={(value) => updateOrderStatus(order._id, value)}
+                                  onValueChange={(value: OrderStatus) => updateOrderStatus(order._id, value)}
                                   disabled={updatingOrderId === order._id}
                                 >
                                   <SelectTrigger className="w-[180px] bg-gray-800 border-gray-700 text-white">
@@ -739,8 +816,8 @@ export default function AdminOrdersDashboard() {
                                         className="hover:bg-gray-800 focus:bg-gray-800"
                                       >
                                         <div className="flex items-center gap-2">
-                                          <span className={`h-2 w-2 rounded-full ${STATUS_COLORS[status as keyof typeof STATUS_COLORS]}`} />
-                                          {STATUS_LABELS[status as keyof typeof STATUS_LABELS]}
+                                          <span className={`h-2 w-2 rounded-full ${STATUS_COLORS[status]}`} />
+                                          {STATUS_LABELS[status]}
                                         </div>
                                       </SelectItem>
                                     ))}
@@ -756,7 +833,7 @@ export default function AdminOrdersDashboard() {
                                 Order Items ({itemCount})
                               </h3>
                               <div className="space-y-3">
-                                {order.items?.map((item: any) => (
+                                {order.items?.map((item) => (
                                   <div 
                                     key={`${item.productId}-${item.color}-${item.size}`} 
                                     className="p-3 bg-gray-800 rounded-md text-sm text-gray-300"
@@ -765,16 +842,7 @@ export default function AdminOrdersDashboard() {
                                     <div className="text-gray-400 text-xs mt-1">
                                       {item.color && (
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                          <div 
-                                            style={{
-                                              width: '16px', 
-                                              height: '16px', 
-                                              backgroundColor: `#${item.color}`,
-                                              borderRadius: '2px',
-                                              border: '1px solid #ddd'
-                                            }}
-                                          />
-                                          {item.color}
+                                   <span>Color:  {item.colorName}</span>
                                         </div>
                                       )}
                                       {item.size && <span className={item.color ? 'ml-2' : ''}>Size: {item.size}</span>}

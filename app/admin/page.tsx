@@ -7,6 +7,7 @@ import { Loader2, Lock, Mail } from 'lucide-react'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import ErrorBoundary from '@/components/ErrorBoundary'
 
 const ADMIN_CREDENTIALS = [
   { email: 'inreluxe@gmail.com', password: process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'reluxe&2025' },
@@ -150,7 +151,11 @@ export default function AdminPage() {
   }
 
   if (authenticated) {
-    return <AdminOrdersDashboard />
+    return (
+      <ErrorBoundary>
+        <AdminOrdersDashboard />
+      </ErrorBoundary>
+    )
   }
 
   return (

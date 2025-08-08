@@ -37,6 +37,24 @@ const staticLinks = [
   { label: 'New', href: '/new' },
 ]
 
+const clerkAppearance = {
+  elements: {
+    card: "bg-black text-white border border-white",
+    headerTitle: "text-white",
+    headerSubtitle: "text-white",
+    formFieldLabel: "text-white",
+    formFieldInput:
+      "bg-black text-white border border-white placeholder-white focus:ring-white focus:border-white",
+    formButtonPrimary: "bg-white text-black hover:bg-gray-300",
+    footerActionText: "text-white",
+    footerActionLink: "text-white underline hover:text-gray-300",
+    socialButtonsBlockButton: "bg-white text-black hover:bg-gray-200",
+    dividerText: "text-white",
+    logoBox: "hidden", // optional: hide Clerk logo
+  },
+}
+
+
 export default function NavbarWithSubcategories() {
   const [open, setOpen] = useState(false)
   const [hoveredCategory, setHoveredCategory] = useState<string | null>(null)
@@ -180,7 +198,9 @@ export default function NavbarWithSubcategories() {
             </SignedIn>
             <SignedOut>
               <div className="flex gap-3">
-                <SignInButton mode="modal">
+                <SignInButton 
+                  appearance={clerkAppearance}
+                mode="modal">
                   <Button 
                     variant="ghost" 
                     size="icon" 
@@ -190,7 +210,9 @@ export default function NavbarWithSubcategories() {
                     <LogIn className="h-5 w-5" />
                   </Button>
                 </SignInButton>
-                <SignUpButton mode="modal">
+                <SignUpButton
+                  appearance={clerkAppearance}
+                mode="modal">
                   <Button 
                     variant="outline" 
                     size="icon" 
@@ -321,7 +343,9 @@ export default function NavbarWithSubcategories() {
                     </SignedIn>
                     <SignedOut>
                       <div className="flex flex-col gap-3">
-                        <SignInButton mode="modal">
+                        <SignInButton
+                          appearance={clerkAppearance}
+                        mode="modal">
                           <Button 
                             variant="ghost" 
                             size="sm" 
@@ -332,7 +356,9 @@ export default function NavbarWithSubcategories() {
                             Sign In
                           </Button>
                         </SignInButton>
-                        <SignUpButton mode="modal">
+                        <SignUpButton
+                          appearance={clerkAppearance}
+                        mode="modal">
                           <Button 
                             variant="outline" 
                             size="sm" 
