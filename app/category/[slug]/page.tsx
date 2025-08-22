@@ -1,4 +1,4 @@
-"use client"; // ✅ makes this a Client Component, so event handlers work
+
 
 import { client } from "@/sanity/lib/client";
 import CategoryList from "../CategoryList";
