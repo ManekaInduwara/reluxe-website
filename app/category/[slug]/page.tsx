@@ -58,7 +58,6 @@ async function getCategoryProducts(slug: string): Promise<{
 
 /**
  * Small inline client component for the "Go Back" button.
- * This allows interactivity without making the whole page a client component.
  */
 function GoBackButton() {
   "use client";
@@ -72,12 +71,10 @@ function GoBackButton() {
   );
 }
 
-export default async function CategoryPage({
-  params,
-}: {
-  params: { slug: string };
-}) {
-  const { slug } = params;
+export default async function CategoryPage(
+  props: { params: { slug: string } } // ✅ correct typing
+) {
+  const { slug } = props.params;
 
   if (!slug) {
     return <CategoryNotFound />;
@@ -97,7 +94,7 @@ export default async function CategoryPage({
           <p className="text-gray-600 mb-6">
             This category exists but doesn't contain any products yet.
           </p>
-          <GoBackButton /> {/* ✅ client component inside server page */}
+          <GoBackButton />
         </div>
       </div>
     );
