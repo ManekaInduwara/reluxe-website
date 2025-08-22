@@ -4,6 +4,7 @@ import CategoryNotFound from "./CategoryNotFound";
 import { Suspense } from "react";
 import CategoryLoading from "./CategoryLoading";
 import React from "react";
+import GoBackButton from "./GoBackButton"; // Move to separate file
 
 interface Product {
   _id: string;
@@ -56,15 +57,18 @@ async function getCategoryProducts(slug: string): Promise<{
   }
 }
 
-function GoBackButton() {
-  "use client";
+// Create a separate component for the empty state that can be a Client Component
+function EmptyCategoryState({ categoryName }: { categoryName: string }) {
   return (
-    <button
-      onClick={() => window.history.back()}
-      className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-    >
-      Go Back
-    </button>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white">
+      <div className="max-w-md text-center p-6">
+        <h1 className="text-2xl font-bold mb-4">No Products in {categoryName}</h1>
+        <p className="text-gray-600 mb-6">
+          This category exists but doesn't contain any products yet.
+        </p>
+        <GoBackButton />
+      </div>
+    </div>
   );
 }
 
@@ -88,17 +92,7 @@ export default async function CategoryPage({ params }: PageProps) {
   }
 
   if (products.length === 0) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white">
-        <div className="max-w-md text-center p-6">
-          <h1 className="text-2xl font-bold mb-4">No Products in {categoryName}</h1>
-          <p className="text-gray-600 mb-6">
-            This category exists but doesn't contain any products yet.
-          </p>
-          <GoBackButton />
-        </div>
-      </div>
-    );
+    return <EmptyCategoryState categoryName={categoryName} />;
   }
 
   return (
