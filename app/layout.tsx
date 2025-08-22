@@ -4,7 +4,6 @@ import "./globals.css";
 import Navbar from "./Components/Navbar";
 import { CartProvider } from "./Context/CartContext";
 import CartDisplay from "./Components/CartDisplay";
-import { MotionConfig } from "framer-motion";
 import { ClerkProvider } from "@clerk/nextjs";
 import NewsletterPopup from "./Components/NewsletterPopup";
 import Footer from "./Components/Footer";
@@ -31,6 +30,9 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+
+  // Check if Clerk is properly configured
+  const clerkPublishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
 
   return (
     <html lang="en" className="scroll-smooth">
@@ -70,42 +72,77 @@ export default function RootLayout({
         }} />
       </head>
       <body className={`${poppins.variable} antialiased bg-black text-white`}>
-        <ClerkProvider>
-          <MotionConfig
-            transition={{
-              type: "spring",
-              mass: 0.5,
-              damping: 10,
-              stiffness: 100,
-              restDelta: 0.0001,
-            }}
+        {clerkPublishableKey ? (
+          <ClerkProvider
+            publishableKey={clerkPublishableKey}
+            appearance={{
+        elements: {
+          card: "bg-black text-white border border-white",
+          headerTitle: "text-white",
+          headerSubtitle: "text-white",
+          formFieldLabel: "text-white",
+          formFieldInput:
+            "bg-black text-white border border-white placeholder-white focus:ring-white focus:border-white",
+          formButtonPrimary: "bg-white text-black hover:bg-gray-300",
+          footerActionText: "text-white",
+          footerActionLink: "text-white underline hover:text-gray-300",
+          socialButtonsBlockButton: "bg-white text-black hover:bg-gray-200",
+          dividerText: "text-white",
+        },
+      }}
           >
-            <GsapScroll>
-              <Toaster 
-                richColors 
-                position="top-right" 
-                toastOptions={{
-                  style: {
-                    background: '#0a0a0a',
-                    border: '1px solid #262626',
-                    color: '#f5f5f5',
-                    fontFamily: 'var(--font-poppins)'
-                  }
-                }} 
-              />
-          
-              <CartProvider>
-               <ClientLayout>
-                <main className="min-h-screen">
-                  {children}
-                </main>
-                </ClientLayout>
+             <GsapScroll>
+                <Toaster 
+                  richColors 
+                  position="top-right" 
+                  toastOptions={{
+                    style: {
+                      background: '#0a0a0a',
+                      border: '1px solid #262626',
+                      color: '#f5f5f5',
+                      fontFamily: 'var(--font-poppins)'
+                    }
+                  }} 
+                />
             
-              </CartProvider>
+                <CartProvider>
+                 <ClientLayout>
+                  <main className="min-h-screen">
+                    {children}
+                  </main>
+                  </ClientLayout>
+              
+                </CartProvider>
 
-            </GsapScroll>
-          </MotionConfig>
-        </ClerkProvider>
+              </GsapScroll>
+          </ClerkProvider>
+        ) : (
+          // Fallback when Clerk is not configured
+          <GsapScroll>
+            <Toaster 
+              richColors 
+              position="top-right" 
+              toastOptions={{
+                style: {
+                  background: '#0a0a0a',
+                  border: '1px solid #262626',
+                  color: '#f5f5f5',
+                  fontFamily: 'var(--font-poppins)'
+                }
+              }} 
+            />
+        
+            <CartProvider>
+             <ClientLayout>
+              <main className="min-h-screen">
+                {children}
+              </main>
+              </ClientLayout>
+          
+            </CartProvider>
+
+          </GsapScroll>
+        )}
       </body>
     </html>
   );
