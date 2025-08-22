@@ -68,12 +68,14 @@ function GoBackButton() {
   );
 }
 
-export default async function CategoryPage({
-  params,
-}: {
-  params: { slug: string };
-}) {
-  const { slug } = params;
+// Update the interface to match Next.js expectations
+interface PageProps {
+  params: Promise<{ slug: string }>;
+}
+
+export default async function CategoryPage({ params }: PageProps) {
+  // Await the params promise to resolve the slug
+  const { slug } = await params;
 
   if (!slug) {
     return <CategoryNotFound />;
