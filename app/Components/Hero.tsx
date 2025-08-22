@@ -22,7 +22,18 @@ export default function Hero() {
   const titleWords = heroData?.title?.split(' ') || ['RELUXE', 'CLOTHING' ]
 
   useEffect(() => {
-    client.fetch("*[_type == 'heroImage'][0]").then(setHeroData)
+    client.fetch("*[_type == 'heroImage'][0]")
+      .then(setHeroData)
+      .catch(error => {
+        console.warn('Failed to fetch hero data:', error);
+        // Set default hero data on failure
+        setHeroData({
+          title: 'RELUXE CLOTHING',
+          subtitle: 'Premium Fashion Collection',
+          tagline: 'Elevate Your Style',
+          ctaText: 'Shop Now'
+        });
+      });
   }, [])
 
   useEffect(() => {

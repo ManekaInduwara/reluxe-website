@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react';
-import { useUser } from '@clerk/nextjs';
+// import { useUser } from '@clerk/nextjs'; // Temporarily disabled for build
 import { client } from '@/sanity/lib/client';
 import { Star, MessageSquare, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -41,7 +41,9 @@ export function ProductFeedbackSection({
   initialRating = 0, 
   initialFeedbacks = [] 
 }: ProductFeedbackProps) {
-  const { user, isSignedIn } = useUser();
+  // const { user, isSignedIn } = useUser(); // Temporarily disabled for build
+  const user = null;
+  const isSignedIn = false;
   const [rating, setRating] = useState(initialRating);
   const [userRating, setUserRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);

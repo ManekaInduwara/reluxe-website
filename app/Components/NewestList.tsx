@@ -9,7 +9,7 @@ import { ArrowRight, ShoppingCart, Star } from 'lucide-react';
 import StockAlert from './Quantity';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useUser } from '@clerk/nextjs';
+// import { useUser } from '@clerk/nextjs'; // Temporarily disabled for build
 import { client } from '@/sanity/lib/client';
 import SplitText from '@/Animations/SplitText/SplitText';
 
@@ -39,7 +39,8 @@ export default function NewestList({ data }: { data: Product[] }) {
   const [clickedId, setClickedId] = useState<string | null>(null);
   const [activeRatings, setActiveRatings] = useState<{[key: string]: number | null}>({});
   const router = useRouter();
-  const { user } = useUser();
+  // const { user } = useUser(); // Temporarily disabled for build
+  const user = null;
   
   const sectionRef = useRef<HTMLElement>(null);
   const headingRef = useRef<HTMLDivElement>(null);

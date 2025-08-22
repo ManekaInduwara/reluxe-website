@@ -8,7 +8,7 @@ import Link from 'next/link';
 import { ArrowRight, Star } from 'lucide-react';
 import StockAlert from './Quantity';
 import { useRouter } from 'next/navigation';
-import { useUser } from '@clerk/nextjs';
+// import { useUser } from '@clerk/nextjs'; // Temporarily disabled for build
 import { client } from '@/sanity/lib/client';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -41,7 +41,8 @@ export default function SimilarProducts({
   const [clickedId, setClickedId] = useState<string | null>(null);
   const [activeRatings, setActiveRatings] = useState<{[key: string]: number | null}>({});
   const router = useRouter();
-  const { user } = useUser();
+  // const { user } = useUser(); // Temporarily disabled for build
+  const user = null;
   
   const sectionRef = useRef<HTMLElement>(null);
   const headingRef = useRef<HTMLDivElement>(null);

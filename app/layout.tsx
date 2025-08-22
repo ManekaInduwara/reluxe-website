@@ -33,6 +33,7 @@ export default function RootLayout({
 
   // Check if Clerk is properly configured
   const clerkPublishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+  const isValidClerkKey = clerkPublishableKey && clerkPublishableKey.startsWith('pk_') && !clerkPublishableKey.includes('dummy')
 
   return (
     <html lang="en" className="scroll-smooth">
@@ -72,7 +73,7 @@ export default function RootLayout({
         }} />
       </head>
       <body className={`${poppins.variable} antialiased bg-black text-white`}>
-        {clerkPublishableKey ? (
+        {isValidClerkKey ? (
           <ClerkProvider
             publishableKey={clerkPublishableKey}
             appearance={{

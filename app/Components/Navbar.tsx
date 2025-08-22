@@ -1,20 +1,15 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Menu, X, ChevronDown, LogIn, UserPlus } from 'lucide-react'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { motion, AnimatePresence } from 'framer-motion'
 import { usePathname } from 'next/navigation'
-import { 
-  SignedIn, 
-  SignedOut, 
-  UserButton, 
-  SignInButton, 
-  SignUpButton 
-} from '@clerk/nextjs'
+
+
 
 const subcategories = {
   Women: [
@@ -37,22 +32,7 @@ const staticLinks = [
   { label: 'New', href: '/new' },
 ]
 
-const clerkAppearance = {
-  elements: {
-    card: "bg-black text-white border border-white",
-    headerTitle: "text-white",
-    headerSubtitle: "text-white",
-    formFieldLabel: "text-white",
-    formFieldInput:
-      "bg-black text-white border border-white placeholder-white focus:ring-white focus:border-white",
-    formButtonPrimary: "bg-white text-black hover:bg-gray-300",
-    footerActionText: "text-white",
-    footerActionLink: "text-white underline hover:text-gray-300",
-    socialButtonsBlockButton: "bg-white text-black hover:bg-gray-200",
-    dividerText: "text-white",
-    logoBox: "hidden", // optional: hide Clerk logo
-  },
-}
+
 
 
 export default function NavbarWithSubcategories() {
@@ -181,49 +161,25 @@ export default function NavbarWithSubcategories() {
         <div className="flex items-center gap-4">
           {/* Clerk Auth - Desktop */}
           <div className="hidden md:flex items-center gap-3">
-            <SignedIn>
-              <UserButton 
-                afterSignOutUrl="/"
-                appearance={{
-                  elements: {
-                    avatarBox: "h-8 w-8",
-                    userButtonPopoverCard: "bg-black border border-gray-800",
-                    userPreviewMainIdentifier: "text-white",
-                    userButtonPopoverActionButtonText: "text-white",
-                    userButtonPopoverActionButtonIcon: "text-white",
-                    userButtonPopoverFooter: "hidden"
-                  }
-                }}
-              />
-            </SignedIn>
-            <SignedOut>
-              <div className="flex gap-3">
-                <SignInButton 
-                  appearance={clerkAppearance}
-                mode="modal">
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="text-white hover:bg-white/10 border-hidden"
-                    aria-label="Sign in"
-                  >
-                    <LogIn className="h-5 w-5" />
-                  </Button>
-                </SignInButton>
-                <SignUpButton
-                  appearance={clerkAppearance}
-                mode="modal">
-                  <Button 
-                    variant="outline" 
-                    size="icon" 
-                    className="bg-white text-black hover:bg-gray-200 border-hidden"
-                    aria-label="Sign up"
-                  >
-                    <UserPlus className="h-5 w-5" />
-                  </Button>
-                </SignUpButton>
-              </div>
-            </SignedOut>
+            {/* Clerk components temporarily disabled for build */}
+            <div className="flex gap-3">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="text-white hover:bg-white/10 border-hidden"
+                aria-label="Sign in"
+              >
+                <LogIn className="h-5 w-5" />
+              </Button>
+              <Button 
+                variant="outline" 
+                size="icon" 
+                className="bg-white text-black hover:bg-gray-200 border-hidden"
+                aria-label="Sign up"
+              >
+                <UserPlus className="h-5 w-5" />
+              </Button>
+            </div>
           </div>
 
           {/* Mobile Menu */}
@@ -327,50 +283,27 @@ export default function NavbarWithSubcategories() {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.4 }}
                   >
-                    <SignedIn>
-                      <div className="flex items-center gap-3">
-                        <UserButton 
-                          afterSignOutUrl="/"
-                          appearance={{
-                            elements: {
-                              avatarBox: "h-8 w-8",
-                              userButtonPopoverCard: "bg-black border border-gray-800"
-                            }
-                          }}
-                        />
-                        <span className="text-sm text-white">My Account</span>
-                      </div>
-                    </SignedIn>
-                    <SignedOut>
-                      <div className="flex flex-col gap-3">
-                        <SignInButton
-                          appearance={clerkAppearance}
-                        mode="modal">
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="w-full text-white hover:bg-white/10 border-hidden flex items-center gap-2"
-                            onClick={() => setOpen(false)}
-                          >
-                            <LogIn className="h-4 w-4" />
-                            Sign In
-                          </Button>
-                        </SignInButton>
-                        <SignUpButton
-                          appearance={clerkAppearance}
-                        mode="modal">
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="w-full bg-white text-black hover:bg-gray-200 border-hidden flex items-center gap-2"
-                            onClick={() => setOpen(false)}
-                          >
-                            <UserPlus className="h-4 w-4" />
-                            Create Account
-                          </Button>
-                        </SignUpButton>
-                      </div>
-                    </SignedOut>
+                    {/* Mobile auth - Clerk temporarily disabled */}
+                    <div className="flex flex-col gap-3">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="w-full text-white hover:bg-white/10 border-hidden flex items-center gap-2"
+                        onClick={() => setOpen(false)}
+                      >
+                        <LogIn className="h-4 w-4" />
+                        Sign In
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="w-full bg-white text-black hover:bg-gray-200 border-hidden flex items-center gap-2"
+                        onClick={() => setOpen(false)}
+                      >
+                        <UserPlus className="h-4 w-4" />
+                        Create Account
+                      </Button>
+                    </div>
                   </motion.div>
                 </motion.nav>
               </SheetContent>

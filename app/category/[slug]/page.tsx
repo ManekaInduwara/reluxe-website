@@ -3,6 +3,7 @@ import CategoryList from "../CategoryList";
 import CategoryNotFound from "./CategoryNotFound";
 import { Suspense } from "react";
 import CategoryLoading from "./CategoryLoading";
+import GoBackButton from "./GoBackButton";
 import React from "react";
 
 interface Product {
@@ -56,17 +57,7 @@ async function getCategoryProducts(slug: string): Promise<{
   }
 }
 
-function GoBackButton() {
-  "use client";
-  return (
-    <button
-      onClick={() => window.history.back()}
-      className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-    >
-      Go Back
-    </button>
-  );
-}
+
 
 // Update the interface to match Next.js expectations
 interface PageProps {
@@ -120,7 +111,12 @@ export async function generateStaticParams() {
       slug: category.slug,
     }));
   } catch (error) {
-    console.error("Error generating static params:", error);
-    return [];
+    console.warn("Error generating static params, using fallback:", error);
+    // Return some common categories as fallback
+    return [
+      { slug: 'women' },
+      { slug: 'men' },
+      { slug: 'accessories' },
+    ];
   }
 }
