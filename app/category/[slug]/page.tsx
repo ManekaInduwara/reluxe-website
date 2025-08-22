@@ -1,10 +1,9 @@
-
-
 import { client } from "@/sanity/lib/client";
 import CategoryList from "../CategoryList";
 import CategoryNotFound from "./CategoryNotFound";
 import { Suspense } from "react";
 import CategoryLoading from "./CategoryLoading";
+import React from "react";
 
 interface Product {
   _id: string;
@@ -57,6 +56,22 @@ async function getCategoryProducts(slug: string): Promise<{
   }
 }
 
+/**
+ * Small inline client component for the "Go Back" button.
+ * This allows interactivity without making the whole page a client component.
+ */
+function GoBackButton() {
+  "use client";
+  return (
+    <button
+      onClick={() => window.history.back()}
+      className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+    >
+      Go Back
+    </button>
+  );
+}
+
 export default async function CategoryPage({
   params,
 }: {
@@ -82,13 +97,7 @@ export default async function CategoryPage({
           <p className="text-gray-600 mb-6">
             This category exists but doesn't contain any products yet.
           </p>
-          {/* ✅ onClick is now valid */}
-          <button
-            onClick={() => window.history.back()}
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-          >
-            Go Back
-          </button>
+          <GoBackButton /> {/* ✅ client component inside server page */}
         </div>
       </div>
     );
