@@ -56,9 +56,6 @@ async function getCategoryProducts(slug: string): Promise<{
   }
 }
 
-/**
- * Small inline client component for the "Go Back" button.
- */
 function GoBackButton() {
   "use client";
   return (
@@ -71,10 +68,12 @@ function GoBackButton() {
   );
 }
 
-export default async function CategoryPage(
-  props: { params: { slug: string } } // ✅ correct typing
-) {
-  const { slug } = props.params;
+export default async function CategoryPage({
+  params,
+}: {
+  params: { slug: string };
+}) {
+  const { slug } = params;
 
   if (!slug) {
     return <CategoryNotFound />;
