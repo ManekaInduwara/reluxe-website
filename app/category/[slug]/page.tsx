@@ -1,8 +1,10 @@
+"use client"; // ✅ makes this a Client Component, so event handlers work
+
 import { client } from "@/sanity/lib/client";
 import CategoryList from "../CategoryList";
 import CategoryNotFound from "./CategoryNotFound";
-import { Suspense } from 'react';
-import CategoryLoading from './CategoryLoading'; // Create this component for loading state
+import { Suspense } from "react";
+import CategoryLoading from "./CategoryLoading";
 
 interface Product {
   _id: string;
@@ -41,57 +43,48 @@ async function getCategoryProducts(slug: string): Promise<{
     );
 
     if (!result) {
-      return {
-        products: [],
-        categoryName: '',
-        exists: false
-      };
+      return { products: [], categoryName: "", exists: false };
     }
 
     return {
       products: result.products || [],
       categoryName: result.name,
-      exists: true
+      exists: true,
     };
   } catch (error) {
-    console.error('Error fetching category products:', error);
-    return {
-      products: [],
-      categoryName: '',
-      exists: false
-    };
+    console.error("Error fetching category products:", error);
+    return { products: [], categoryName: "", exists: false };
   }
 }
 
 export default async function CategoryPage({
   params,
 }: {
-  params: Promise<{ slug: string }>;
+  params: { slug: string };
 }) {
-  const resolvedParams = await params;
-  
-  if (!resolvedParams?.slug) {
+  const { slug } = params;
+
+  if (!slug) {
     return <CategoryNotFound />;
   }
 
-  const { products, categoryName, exists } = await getCategoryProducts(resolvedParams.slug);
+  const { products, categoryName, exists } = await getCategoryProducts(slug);
 
   if (!exists) {
-    // Pass the attempted slug to show in the not found message
-    return <CategoryNotFound attemptedSlug={resolvedParams.slug} />;
+    return <CategoryNotFound attemptedSlug={slug} />;
   }
 
   if (products.length === 0) {
-    // Special case for empty category
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white ">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white">
         <div className="max-w-md text-center p-6">
           <h1 className="text-2xl font-bold mb-4">No Products in {categoryName}</h1>
           <p className="text-gray-600 mb-6">
             This category exists but doesn't contain any products yet.
           </p>
-          <button 
-            onClick={() => window.history.back()} 
+          {/* ✅ onClick is now valid */}
+          <button
+            onClick={() => window.history.back()}
             className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           >
             Go Back
@@ -104,10 +97,7 @@ export default async function CategoryPage({
   return (
     <main>
       <Suspense fallback={<CategoryLoading />}>
-        <CategoryList 
-          data={products} 
-          categoryName={categoryName} 
-        />
+        <CategoryList data={products} categoryName={categoryName} />
       </Suspense>
     </main>
   );
@@ -116,16 +106,14 @@ export default async function CategoryPage({
 export async function generateStaticParams() {
   try {
     const categories = await client.fetch(
-      `*[_type == "category"] {
-        "slug": slug.current
-      }`
+      `*[_type == "category"] { "slug": slug.current }`
     );
-    
+
     return categories.map((category: { slug: string }) => ({
       slug: category.slug,
     }));
   } catch (error) {
-    console.error('Error generating static params:', error);
+    console.error("Error generating static params:", error);
     return [];
   }
 }
