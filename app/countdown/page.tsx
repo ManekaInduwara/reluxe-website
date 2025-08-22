@@ -14,7 +14,7 @@ function CountdownContent() {
   const containerRef = useRef<HTMLDivElement>(null)
   const clockRef = useRef<SVGSVGElement>(null)
 
-  const TARGET_DATE = new Date('2025-08-08T23:59:59Z').getTime()
+  const TARGET_DATE = new Date('2025-08-22T20:08:08Z').getTime()
   const [timeLeft, setTimeLeft] = useState({
     days: '00',
     hours: '00',
@@ -142,9 +142,6 @@ alt={''} />
           }}
         />
           </div>
-          <p className="text-sm text-gray-400 mt-4">
-        Launching on {new Date(TARGET_DATE).toLocaleDateString()}
-          </p>
         </div>
       </div>
     </div>
